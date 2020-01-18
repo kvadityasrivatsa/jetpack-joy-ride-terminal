@@ -18,7 +18,8 @@ GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 28
 GAME_BOUNDARY_R = 28
-V_CONST = 1
+V_CONST = 2
+A_CONST = 1
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -31,25 +32,44 @@ def setup():
 		for i in range(SCRN_HEIGHT):
 			plot(i,j," ","","BLACK")
 	print("\033[2J" + "\033[0;0H")
+	background_update(0)
 
-	# for j in range(WALL_WIDTH):		# UPPER BOUNDARY
-	# 	if(j%2):
-	# 		i = 0
-	# 	else:
-	# 		i = 3
-	# 	while(i<=SCRN_WIDTH-6):
-	# 		plot(j,i,"|_____","GREEN","")
-	# 		i+=6   
+	# for j in range(SCRN_WIDTH-10):
+	# 	plot(GAME_BOUNDARY_D,j,"=","WHITE","")
 
-	# for j in range(WALL_WIDTH):		# LOWER BOUNDARY
-	# 	if(j%2):
-	# 		i = 0
-	# 	else:
-	# 		i = 3
-	# 	while(i<=SCRN_WIDTH-6):
-	# 		plot(j+GAME_BOUNDARY_D,i,"|_____","GREEN","")
-	# 		i+=6   	      
+def background_update(offset):
+	brick = ['|','_','_','_','_','_']
+	margin = 0
+	# while(1):
+	# if(offset<1):
+	# 	offset=5
+	i=0
+	while(i<=SCRN_WIDTH-4-offset-10):
+		plot(offset+i,GAME_BOUNDARY_D-1,"___","BLUE","")
+		plot(offset+i,WALL_WIDTH,"_|_","BLUE","")
+		i+=1
 
+	for j in range(WALL_WIDTH):		# UPPER BOUNDARY
+		i = 0
+		if(j%2):
+			margin = 0
+		else:
+			margin = 3
+		while(i<=SCRN_WIDTH-6-offset-10):
+			plot(offset+i+margin,j,brick[i%len(brick)],"GREEN","")
+			i+=1   
+
+	for j in range(WALL_WIDTH):		# LOWER BOUNDARY
+		i = 0
+		if(j%2):
+			margin = 0
+		else:
+			margin = 3
+		while(i<=SCRN_WIDTH-6-offset-10):
+			plot(offset+i+margin,j+GAME_BOUNDARY_D,brick[i%len(brick)],"GREEN","")
+			i+=1     	      
+		# offset-=1
+		# time.sleep(0.02)
 #----------------------------------------#
 
 def plot(x,y):
@@ -57,7 +77,7 @@ def plot(x,y):
 
 #----------------------------------------#	
 
-def plot(x,y,string,fore_col,back_col):
+def plot(y,x,string,fore_col,back_col):
 
 	if(fore_col == "BLACK"):
 		fore_col_str = Fore.BLACK
@@ -151,19 +171,31 @@ class Person(Entity):
 		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		self.pos_x = self.pos_x + self.vel_x*V_CONST
 		self.pos_y = self.pos_y + self.vel_y*V_CONST
-		plot(self.pos_x, self.pos_y, " ", "", "WHITE")
+		if(self.pos_y>GAME_BOUNDARY_D-1):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_D-1
+		plot(self.pos_x, self.pos_y, " ", "", "WHITE")	#shape
 
-	def move(self, direction):
+	def update_vel(self):
+		# if(self.vel_x)
+		self.vel_y -= self.acc_y*A_CONST
+
+	def move_y(self, direction):
 
 		if(direction == 'up'):
-			self.vel_x -= 0.001
-		elif(direction == 'down'):
-			self.vel_x += 0.001
-		elif(direction == 'left'):
 			self.vel_y -= 0.001
-		elif(direction == 'right'):
-			self.vel_y += 0.001
+		# elif(direction == 'down'):
+		# 	self.vel_x += 0.001
 
+	def disp_vects(self):
+		plot(0,0,"vel="+str(self.vel_y)+" acc_x="+str(self.acc_y), "WHITE", "BLACK")
+
+
+class Player(Person):
+	def __init__(self,x,y):
+		Person.__init__(self,x,y)
+		self.gravity = 0.0005
+		self.acc_y += -1 * self.gravity
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -173,22 +205,38 @@ setup()
 
 game = Game(5)	# New game created
 
-box = Person(10,40)
+box = Player(40,10)
 # box.render_test()
 # time.sleep(2)
 # box.update_pos(20,10)
 # box.render_test()
-while(keyboard.is_pressed('z')==0):
-	box.update_pos()
 
+bcg_counter = 0
+bcg_iter = 5
+
+while(keyboard.is_pressed('b')==0):
+	pass
+
+while(keyboard.is_pressed('z')==0):
+
+	box.update_pos()
+	box.update_vel()
+	box.disp_vects()
 	if(keyboard.is_pressed('w')):
-		box.move('up')
-	elif(keyboard.is_pressed('s')):
-		box.move('down')
-	elif(keyboard.is_pressed('a')):
-		box.move('left')
-	elif(keyboard.is_pressed('d')):
-		box.move('right')
+		box.move_y('up')
+	# elif(keyboard.is_pressed('s')):
+	# 	box.move_y('down')
+	# elif(keyboard.is_pressed('a')):
+	# 	box.move('left')
+	# elif(keyboard.is_pressed('d')):
+	# 	box.move('right')
+
+	bcg_counter+=1
+	if(bcg_counter>50):
+		background_update(bcg_iter)
+		bcg_iter-=1
+		if(bcg_iter<0):
+			bcg_iter = 5
 
 	time.sleep(0.005)
 
