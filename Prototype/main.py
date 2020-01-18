@@ -1,6 +1,7 @@
 import colorama
 from colorama import Fore, Back, Style
 import numpy
+import keyboard
 import time
 import math
 import classes
@@ -17,6 +18,7 @@ GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 28
 GAME_BOUNDARY_R = 28
+V_CONST = 1
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -30,23 +32,23 @@ def setup():
 			plot(i,j," ","","BLACK")
 	print("\033[2J" + "\033[0;0H")
 
-	for j in range(WALL_WIDTH):		# UPPER BOUNDARY
-		if(j%2):
-			i = 0
-		else:
-			i = 3
-		while(i<=SCRN_WIDTH-6):
-			plot(j,i,"|_____","GREEN","")
-			i+=6   
+	# for j in range(WALL_WIDTH):		# UPPER BOUNDARY
+	# 	if(j%2):
+	# 		i = 0
+	# 	else:
+	# 		i = 3
+	# 	while(i<=SCRN_WIDTH-6):
+	# 		plot(j,i,"|_____","GREEN","")
+	# 		i+=6   
 
-	for j in range(WALL_WIDTH):		# LOWER BOUNDARY
-		if(j%2):
-			i = 0
-		else:
-			i = 3
-		while(i<=SCRN_WIDTH-6):
-			plot(j+GAME_BOUNDARY_D,i,"|_____","GREEN","")
-			i+=6   	      
+	# for j in range(WALL_WIDTH):		# LOWER BOUNDARY
+	# 	if(j%2):
+	# 		i = 0
+	# 	else:
+	# 		i = 3
+	# 	while(i<=SCRN_WIDTH-6):
+	# 		plot(j+GAME_BOUNDARY_D,i,"|_____","GREEN","")
+	# 		i+=6   	      
 
 #----------------------------------------#
 
@@ -132,10 +134,36 @@ class Entity():
 
 class Person(Entity):
 
-	def update_pos(self,x,y):
+	def __init__(self,x,y):
+		Entity.__init__(self,x,y)
+		self.vel_x = 0
+		self.vel_y = 0
+
+		self.acc_x = 0
+		self.acc_y = 0
+
+	def define_pos(self,x,y):
 		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		self.pos_x = x
 		self.pos_y = y
+
+	def update_pos(self):
+		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
+		self.pos_x = self.pos_x + self.vel_x*V_CONST
+		self.pos_y = self.pos_y + self.vel_y*V_CONST
+		plot(self.pos_x, self.pos_y, " ", "", "WHITE")
+
+	def move(self, direction):
+
+		if(direction == 'up'):
+			self.vel_x -= 0.001
+		elif(direction == 'down'):
+			self.vel_x += 0.001
+		elif(direction == 'left'):
+			self.vel_y -= 0.001
+		elif(direction == 'right'):
+			self.vel_y += 0.001
+
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -150,10 +178,19 @@ box = Person(10,40)
 # time.sleep(2)
 # box.update_pos(20,10)
 # box.render_test()
-for i in range(1000):
-	box.update_pos(10 + int(3*math.sin(i*0.05)), 40+i*0.1)
-	box.render_test()
-	time.sleep(1/(game.ret_game_speed()*20))
+while(keyboard.is_pressed('z')==0):
+	box.update_pos()
+
+	if(keyboard.is_pressed('w')):
+		box.move('up')
+	elif(keyboard.is_pressed('s')):
+		box.move('down')
+	elif(keyboard.is_pressed('a')):
+		box.move('left')
+	elif(keyboard.is_pressed('d')):
+		box.move('right')
+
+	time.sleep(0.005)
 
 terminate()
 
