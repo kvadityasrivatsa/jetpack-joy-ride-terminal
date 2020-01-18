@@ -18,8 +18,9 @@ GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 28
 GAME_BOUNDARY_R = 28
-V_CONST = 2
+V_CONST = 2.7
 A_CONST = 1
+GAME_SPD = 100
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -32,44 +33,12 @@ def setup():
 		for i in range(SCRN_HEIGHT):
 			plot(i,j," ","","BLACK")
 	print("\033[2J" + "\033[0;0H")
-	background_update(0)
 
-	# for j in range(SCRN_WIDTH-10):
-	# 	plot(GAME_BOUNDARY_D,j,"=","WHITE","")
-
-def background_update(offset):
-	brick = ['|','_','_','_','_','_']
-	margin = 0
-	# while(1):
-	# if(offset<1):
-	# 	offset=5
 	i=0
-	while(i<=SCRN_WIDTH-4-offset-10):
-		plot(offset+i,GAME_BOUNDARY_D-1,"___","BLUE","")
-		plot(offset+i,WALL_WIDTH,"_|_","BLUE","")
-		i+=1
-
-	for j in range(WALL_WIDTH):		# UPPER BOUNDARY
-		i = 0
-		if(j%2):
-			margin = 0
-		else:
-			margin = 3
-		while(i<=SCRN_WIDTH-6-offset-10):
-			plot(offset+i+margin,j,brick[i%len(brick)],"GREEN","")
-			i+=1   
-
-	for j in range(WALL_WIDTH):		# LOWER BOUNDARY
-		i = 0
-		if(j%2):
-			margin = 0
-		else:
-			margin = 3
-		while(i<=SCRN_WIDTH-6-offset-10):
-			plot(offset+i+margin,j+GAME_BOUNDARY_D,brick[i%len(brick)],"GREEN","")
-			i+=1     	      
-		# offset-=1
-		# time.sleep(0.02)
+	while(i<=SCRN_WIDTH-4):
+		plot(i,GAME_BOUNDARY_D+1,"[]","BLUE","")
+		plot(i,WALL_WIDTH,"[]","BLUE","")
+		i+=2
 #----------------------------------------#
 
 def plot(x,y):
@@ -171,9 +140,12 @@ class Person(Entity):
 		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		self.pos_x = self.pos_x + self.vel_x*V_CONST
 		self.pos_y = self.pos_y + self.vel_y*V_CONST
-		if(self.pos_y>GAME_BOUNDARY_D-1):
+		if(self.pos_y>GAME_BOUNDARY_D):
 			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_D-1
+			self.pos_y=GAME_BOUNDARY_D
+		elif(self.pos_y<GAME_BOUNDARY_U):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_U
 		plot(self.pos_x, self.pos_y, " ", "", "WHITE")	#shape
 
 	def update_vel(self):
@@ -206,39 +178,29 @@ setup()
 game = Game(5)	# New game created
 
 box = Player(40,10)
-# box.render_test()
-# time.sleep(2)
-# box.update_pos(20,10)
-# box.render_test()
-
 bcg_counter = 0
 bcg_iter = 5
 
 while(keyboard.is_pressed('b')==0):
 	pass
 
+
+# GAME ON
 while(keyboard.is_pressed('z')==0):
 
 	box.update_pos()
 	box.update_vel()
 	box.disp_vects()
+
 	if(keyboard.is_pressed('w')):
 		box.move_y('up')
-	# elif(keyboard.is_pressed('s')):
-	# 	box.move_y('down')
-	# elif(keyboard.is_pressed('a')):
-	# 	box.move('left')
-	# elif(keyboard.is_pressed('d')):
-	# 	box.move('right')
 
-	bcg_counter+=1
-	if(bcg_counter>50):
-		background_update(bcg_iter)
-		bcg_iter-=1
-		if(bcg_iter<0):
-			bcg_iter = 5
+	time.sleep(0.009)
+# DED
 
-	time.sleep(0.005)
+print("QUIT? press q")
+while(keyboard.is_pressed('q')==0):
+	pass
 
 terminate()
 
