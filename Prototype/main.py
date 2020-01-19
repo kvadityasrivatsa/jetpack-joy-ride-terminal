@@ -18,7 +18,8 @@ GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 28
 GAME_BOUNDARY_R = 28
-V_CONST = 2.7
+VY_CONST = 2.7
+VX_CONST = 1
 A_CONST = 1
 GAME_SPD = 100
 
@@ -90,6 +91,14 @@ def plot(y,x,string,fore_col,back_col):
 
 #----------------------------------------#
 
+def deploy_tokens():
+	fire_beam = []
+	for i in range(10):
+		fire_beam.append(Token(0,10,i*100))
+	return fire_beam
+
+#----------------------------------------#
+
 def terminate():
 	plot(SCRN_HEIGHT,0,"","","")
 
@@ -116,30 +125,35 @@ class Entity():
 		self.pos_x = x
 		self.pos_y = y
 
-	def render_test(self):
-		plot(self.pos_x, self.pos_y, " ", "", "BLUE")
-
-#----------------------------------------#
-
-class Person(Entity):
-
-	def __init__(self,x,y):
-		Entity.__init__(self,x,y)
 		self.vel_x = 0
 		self.vel_y = 0
 
 		self.acc_x = 0
 		self.acc_y = 0
 
+	def render_test(self):
+		plot(self.pos_x, self.pos_y, " ", "", "BLUE")
+
 	def define_pos(self,x,y):
 		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		self.pos_x = x
 		self.pos_y = y
 
+	def disp_vects(self):
+		plot(0,0,"vel="+str(self.vel_y)+" acc_y="+str(self.acc_y), "WHITE", "BLACK")
+
+#----------------------------------------#
+
+class Kinitos(Entity):
+	def __init__(self,x,y):
+		Entity.__init__(self,x,y)
+		self.gravity = 0.00002
+		self.acc_y += -1 * self.gravity
+
 	def update_pos(self):
 		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
-		self.pos_x = self.pos_x + self.vel_x*V_CONST
-		self.pos_y = self.pos_y + self.vel_y*V_CONST
+		self.pos_x = self.pos_x + self.vel_x*VX_CONST
+		self.pos_y = self.pos_y + self.vel_y*VY_CONST
 		if(self.pos_y>GAME_BOUNDARY_D):
 			self.vel_y=0
 			self.pos_y=GAME_BOUNDARY_D
@@ -149,25 +163,28 @@ class Person(Entity):
 		plot(self.pos_x, self.pos_y, " ", "", "WHITE")	#shape
 
 	def update_vel(self):
-		# if(self.vel_x)
 		self.vel_y -= self.acc_y*A_CONST
 
-	def move_y(self, direction):
+	def move_up(self):
+			self.vel_y -= 0.00006
 
-		if(direction == 'up'):
-			self.vel_y -= 0.001
-		# elif(direction == 'down'):
-		# 	self.vel_x += 0.001
+#----------------------------------------#
 
-	def disp_vects(self):
-		plot(0,0,"vel="+str(self.vel_y)+" acc_x="+str(self.acc_y), "WHITE", "BLACK")
+# class Tokens(Entity):	# Fire beams, Magnets & COINS$$
+# 	def __init__(self,x,y,frame_loc):
+# 		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
+# 		self.body_array = [[self.x,self.y]]
+# 		self.frame_loc = frame_loc
+
+# 	def if_collision(self,x,y):
+# 		for i in self.body_array:
+# 			if(x==i[0] and y==i[1]):
+# 				return 1
+# 		return 0
+
+# 	def render(self,frame_R_pos):
 
 
-class Player(Person):
-	def __init__(self,x,y):
-		Person.__init__(self,x,y)
-		self.gravity = 0.0005
-		self.acc_y += -1 * self.gravity
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -177,25 +194,46 @@ setup()
 
 game = Game(5)	# New game created
 
-box = Player(40,10)
-bcg_counter = 0
-bcg_iter = 5
+box = Kinitos(80,10)
 
 while(keyboard.is_pressed('b')==0):
 	pass
 
-
+frame_R_pos = SCRN_WIDTH-5
+frame_L_pos = 5
+frame_inc_counter = 0
+# fire_beam = deploy_tokens()
+# render_list = []
+# out_of_field = []
+	
 # GAME ON
 while(keyboard.is_pressed('z')==0):
+
+	# print(frame_R_pos)
+
+	# while(fire_beam[0].frame_loc<frame_R_pos):
+	# 	temp_beam = fire_beam.pop(0)
+	# 	render_list.append(temp_beam)
+
+	# while(render_list[0].frame_loc<frame_L_pos):
+	# 	temp_beam = render_list.pop(0)
+	# 	out_of_field.append(temp_beam)
+
+	# for i in 
 
 	box.update_pos()
 	box.update_vel()
 	box.disp_vects()
 
-	if(keyboard.is_pressed('w')):
-		box.move_y('up')
+	if(keyboard.is_pressed("w")):
+		box.move_up()
 
-	time.sleep(0.009)
+	frame_inc_counter+=1
+	if(frame_inc_counter>1000):
+		frame_inc_counter = 0
+		frame_R_pos+=1
+		frame_L_pos+=1
+	time.sleep(0.001)
 # DED
 
 print("QUIT? press q")
