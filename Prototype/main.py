@@ -17,7 +17,7 @@ WALL_WIDTH = 4
 GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 28
-GAME_BOUNDARY_R = 28
+GAME_BOUNDARY_R = SCRN_WIDTH - 5
 VY_CONST = 2.7
 VX_CONST = 1
 A_CONST = 1
@@ -89,13 +89,16 @@ def plot(y,x,string,fore_col,back_col):
 
 	print("\033[" + str(int(x)) + ";" + str(int(y)) + "H" + fore_col_str + back_col_str + string)
 
+def plot_obj(obj):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col,back_col)
+	
+
 #----------------------------------------#
 
-def deploy_tokens():
-	fire_beam = []
-	for i in range(10):
-		fire_beam.append(Token(0,10,i*100))
-	return fire_beam
+# def deploy_tokens():
+# 	fire_beam = []
+# 	for i in range(10):
+# 		fire_beam.append(Token(0,10,(i+1)*100))
+# 	return fire_beam
 
 #----------------------------------------#
 
@@ -130,6 +133,8 @@ class Entity():
 
 		self.acc_x = 0
 		self.acc_y = 0
+
+		self.body_array = [[self.pos_x,self.pos_y]]
 
 	def render_test(self):
 		plot(self.pos_x, self.pos_y, " ", "", "BLUE")
@@ -170,21 +175,33 @@ class Kinitos(Entity):
 
 #----------------------------------------#
 
-# class Tokens(Entity):	# Fire beams, Magnets & COINS$$
-# 	def __init__(self,x,y,frame_loc):
-# 		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
-# 		self.body_array = [[self.x,self.y]]
-# 		self.frame_loc = frame_loc
+class Token(Entity):	# Fire beams, Magnets & COINS$$
+	def __init__(self,frame_loc,y):
+		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
+		self.frame_loc = frame_loc
+		self.status = False
 
-# 	def if_collision(self,x,y):
-# 		for i in self.body_array:
-# 			if(x==i[0] and y==i[1]):
-# 				return 1
-# 		return 0
+	def activate_token(self):
+		self.vel_x -= 0.01
+		self.pos_x = GAME_BOUNDARY_R
+		self.status = True
 
-# 	def render(self,frame_R_pos):
+	def deactivate_token(self):
+		self.vel_x = 0
+		self.pos_x = -1
+		self.status = False
 
+	def if_collision(self,x,y):
+		for i in self.body_array:
+			if(int(x)==int(i[0]) and int(y)==int(i[1])):
+				return 1
+		return 0
 
+	def render(self):
+		print("{"+"X:"+str(self.pos_x)+","+"Y:"+str(self.pos_y)+",Vx:"+str(self.vel_x)+"}")
+		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
+		self.pos_x = self.pos_x + self.vel_x*VX_CONST
+		plot(self.pos_x, self.pos_y, " ", "", "YELLOW")
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -196,30 +213,32 @@ game = Game(5)	# New game created
 
 box = Kinitos(80,10)
 
+token_list = []
+token_list.append(Token(200,20))
+
 while(keyboard.is_pressed('b')==0):
 	pass
-
-frame_R_pos = SCRN_WIDTH-5
-frame_L_pos = 5
-frame_inc_counter = 0
-# fire_beam = deploy_tokens()
-# render_list = []
-# out_of_field = []
 	
+frame_L_pos = 5
+frame_R_pos = GAME_BOUNDARY_R - 5
+
 # GAME ON
 while(keyboard.is_pressed('z')==0):
 
-	# print(frame_R_pos)
+	for i in token_list:
+		if(i.frame_loc<=frame_R_pos and i.status==False):
+			i.activate_token()
+		elif(i.frame_loc<=frame_L_pos and i.status==True):
+			i.deactivate_token()
 
-	# while(fire_beam[0].frame_loc<frame_R_pos):
-	# 	temp_beam = fire_beam.pop(0)
-	# 	render_list.append(temp_beam)
+	for i in token_list:
+		if(i.status==True):
+			i.render()
 
-	# while(render_list[0].frame_loc<frame_L_pos):
-	# 	temp_beam = render_list.pop(0)
-	# 	out_of_field.append(temp_beam)
+	print(box.pos_x,box.pos_y)
 
-	# for i in 
+	# if(token_list[0].if_collision(box.pos_x,box.pos_y)):
+	# 	print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 	box.update_pos()
 	box.update_vel()
@@ -228,12 +247,13 @@ while(keyboard.is_pressed('z')==0):
 	if(keyboard.is_pressed("w")):
 		box.move_up()
 
-	frame_inc_counter+=1
-	if(frame_inc_counter>1000):
-		frame_inc_counter = 0
-		frame_R_pos+=1
-		frame_L_pos+=1
-	time.sleep(0.001)
+
+	frame_L_pos+=(1/GAME_SPD)	# 1/game spd
+	frame_R_pos+=(1/GAME_SPD)	# 1/game spd
+
+	print("L:", frame_L_pos, ", ", "R:", frame_R_pos)
+
+	time.sleep(0.001) 	# game 1/fps
 # DED
 
 print("QUIT? press q")
