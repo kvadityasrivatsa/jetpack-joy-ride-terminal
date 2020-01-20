@@ -4,8 +4,6 @@ import numpy
 import keyboard
 import time
 import math
-import classes
-import methods
 
 #-------------------------------------------------------------------------------------#
 #								     | CONSTANTS |								      #
@@ -168,7 +166,6 @@ class Kinitos(Entity):
 		self.acc_y += -1 * self.gravity
 
 	def update_pos(self):
-		# plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		plot_obj(self,"clear")
 		self.pos_x = self.pos_x + self.vel_x*VX_CONST
 		self.pos_y = self.pos_y + self.vel_y*VY_CONST
@@ -178,7 +175,6 @@ class Kinitos(Entity):
 		elif(self.pos_y<GAME_BOUNDARY_U):
 			self.vel_y=0
 			self.pos_y=GAME_BOUNDARY_U
-		# plot(self.pos_x, self.pos_y, " ", "", "WHITE")	#shape
 		plot_obj(self,"plot")
 
 	def update_vel(self):
@@ -194,32 +190,44 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
 		self.frame_loc = frame_loc
 		self.status = False
-		self.body_array = [[0,0," ","","YELLOW"],[1,0," ","","MAGENTA"],[2,0," ","","YELLOW"],[3,0," ","","MAGENTA"],[4,0," ","","YELLOW"],[5,0," ","","MAGENTA"],[6,0," ","","YELLOW"],[7,0," ","","MAGENTA"]]
 
 	def activate_token(self):
 		self.vel_x -= GAME_SPD
 		self.pos_x = GAME_BOUNDARY_R
 		self.status = True
+		print("Token Activated")
 
 	def deactivate_token(self):
 		self.vel_x = 0
-		self.pos_x -= 1
+		self.pos_x = 400
 		self.status = False
 		plot_obj(self,"clear")
+		print("Token Deactivated")
 
 	def if_collision(self,x,y):
 		for i in self.body_array:
-			# print(int(x),int(i[0]+self.pos_x),int(y),int(i[1]+self.pos_y))
 			if(int(x)==int(i[0]+self.pos_x) and int(y)==int(i[1]+self.pos_y)):
 				return True
 
 	def render(self):
-		# print("{"+"X:"+str(self.pos_x)+","+"Y:"+str(self.pos_y)+",Vx:"+str(self.vel_x)+"}")
-		# plot(self.pos_x, self.pos_y, " ", "", "BLACK")
 		plot_obj(self,"clear")
 		self.pos_x = self.pos_x + self.vel_x*VX_CONST
-		# plot(self.pos_x, self.pos_y, " ", "", "YELLOW")
 		plot_obj(self,"plot")
+
+#----------------------------------------#
+
+class Fire_Beam(Token):
+	def __init__(self,frame_loc,y,angle,length):
+		Token.__init__(self,frame_loc,y)
+		self.token_type = "fire_beam"
+		self.damage = 1
+		self.health = 1
+		if(angle==0):
+			for i in range(length):
+					self.body_array.append([i,0,"<","BLACK","RED"])
+
+		# elif(angle==90):
+		# 	if()
 
 #----------------------------------------#
 
@@ -241,15 +249,15 @@ setup()
 
 game = Game(5)	# New game created
 
-box = Player(80,10)
+ares = Player(80,10)
 
 token_list = []
-token_list.append(Token(170,20))
+token_list.append(Fire_Beam(170,20,0,10))
 
 while(keyboard.is_pressed('b')==0):
 	pass
 	
-frame_L_pos = 1
+frame_L_pos = 0
 frame_R_pos = GAME_BOUNDARY_R - 3
 
 # GAME ON
@@ -258,28 +266,24 @@ while(keyboard.is_pressed('z')==0):
 	for i in token_list:
 		if(i.frame_loc<=frame_R_pos and i.status==False):
 			i.activate_token()
-		elif(i.frame_loc<=frame_L_pos and i.status==True):
+		if(i.frame_loc<=frame_L_pos and i.status==True):
 			i.deactivate_token()
 
 	for i in token_list:
 		if(i.status==True):
 			i.render()
 
-	# plot(40,40,'@',"GREEN","CYAN")
-
-	# print(box.pos_x,box.pos_y)
-
-	box.update_pos()
-	box.update_vel()
-	box.disp_vects()
+	ares.update_pos()
+	ares.update_vel()
+	ares.disp_vects()
 
 	for i in token_list:
 		# if(i.status==True):
-		if(box.if_hit(i)==True):
+		if(ares.if_hit(i)==True):
 			plot(40,40,'@',"GREEN","CYAN")
 
 	if(keyboard.is_pressed("w")):
-		box.move_up()
+		ares.move_up()
 
 
 	frame_L_pos+=(GAME_SPD)	# 1/game spd
@@ -287,7 +291,7 @@ while(keyboard.is_pressed('z')==0):
 
 	# print("L:", frame_L_pos, ", ", "R:", frame_R_pos)
 
-	time.sleep(0.001) 	# game 1/fps
+	time.sleep(0.01) 	# game 1/fps
 # DED
 
 # print("QUIT? press q")
