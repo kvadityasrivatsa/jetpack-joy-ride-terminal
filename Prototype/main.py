@@ -135,7 +135,7 @@ class Game():
 
 	def fire_bullet(self,player):
 		self.bullet_count += 1
-		bullet = Bullet(player.bound_R,player.pos_y,BULLET_VEL,self.bullet_count)
+		bullet = Bullet(player.bound_R+player.pos_x+1,player.pos_y,BULLET_VEL,self.bullet_count)
 		self.ammo -= 1
 		self.bullet_list.append(bullet)
 
@@ -148,6 +148,12 @@ class Game():
 	def display_ammo(self):
 		plot_text(50,1,"                  ")
 		plot_text(50,1,"Ammo: "+str(self.ammo))
+
+	def bullet_out(self,bullet):
+		if(bullet.pos_x>GAME_BOUNDARY_R):
+			return True
+		else:
+			return False
 
 
 #----------------------------------------#
@@ -244,6 +250,9 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		self.pos_x = self.pos_x + self.vel_x*VX_CONST
 		plot_obj(self,"plot")
 
+	def redact(self):
+		plot_obj(self,"clear")
+
 #----------------------------------------#
 
 class Fire_Beam(Token):
@@ -260,8 +269,12 @@ class Fire_Beam(Token):
 			self.bound_R = length
 
 		elif(angle==90):
-			for i in range(length):
-				self.body_array.append([i,0,"<","BLACK","RED"])
+			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
+				for i in range(length):
+					self.body_array.append([0,i,"<","BLACK","RED"])
+			else:
+				for i in range(length):
+					self.body_array.append([0,-1*i,"<","BLACK","RED"])
 			self.bound_L = 0
 			self.bound_R = 0
 
@@ -338,12 +351,14 @@ game = Game(5)	# New game created
 ares = Player(30,10)
 
 # token_list = []
-game.token_list.append(Fire_Beam(170,20,0,10))
-game.token_list.append(Fire_Beam(200,30,0,10))
-game.token_list.append(Fire_Beam(160,30,90,10))
-game.token_list.append(Fire_Beam(300,10,45,10))
-game.token_list.append(Fire_Beam(250,21,45,10))
-game.token_list.append(Fire_Beam(350,30,45,10))
+game.token_list.append(Fire_Beam(160,20,0,10))
+game.token_list.append(Fire_Beam(180,30,0,10))
+game.token_list.append(Fire_Beam(200,30,90,10))
+game.token_list.append(Fire_Beam(220,10,45,10))
+game.token_list.append(Fire_Beam(240,21,45,10))
+game.token_list.append(Fire_Beam(260,30,45,10))
+game.token_list.append(Fire_Beam(280,10,90,20))
+game.token_list.append(Fire_Beam(300,40,90,20))
 game.token_list.append(Coin(180,25))
 game.token_list.append(Coin(182,25))
 game.token_list.append(Coin(184,25))
@@ -374,7 +389,10 @@ while(keyboard.is_pressed('z')==0):
 			i.render()
 
 	for i in game.bullet_list:
-		i.update_pos()
+		if(game.bullet_out(i)):
+			game.bullet_list.remove(i) # if bullet gone out of scope
+		else:
+			i.update_pos()
 
 	ares.update_pos()
 	ares.update_vel()
@@ -386,20 +404,22 @@ while(keyboard.is_pressed('z')==0):
 	game.display_ammo()
 
 	for i in game.token_list:
-		# if(i.status==True):
-		if(ares.if_hit(i)==True):
-			if(i.token_type=="coin"):
-				ares.treasure+=i.reward
-				game.token_list.remove(i)
-			elif(i.token_type=="fire_beam"):
-				ares.health-=i.damage
+		if(i.status==True):
+			if(ares.if_hit(i)==True):
+				if(i.token_type=="coin"):
+					ares.treasure+=i.reward
+					game.token_list.remove(i)
+				elif(i.token_type=="fire_beam"):
+					ares.health-=i.damage
 
-	# for bullet in game.bullet_list:
-	# 	for tok in game.token_list:
-	# 		if(bullet.if_hit(tok)==True):
-	# 			if(tok.token_type=="fire_beam"):
-	# 				game.bullet_list.remove(bullet)
-	# 				game.token_list.remove(tok)
+	for bullet in game.bullet_list:
+		for tok in game.token_list:
+			if(tok.status==True):
+				if(tok.token_type=="fire_beam"):
+					if(bullet.if_hit(tok)==True):
+						tok.redact()	# erase fire beam from screen
+						game.bullet_list.remove(bullet)
+						game.token_list.remove(tok)
 
 	if(keyboard.is_pressed("w")):
 		ares.move_up()
