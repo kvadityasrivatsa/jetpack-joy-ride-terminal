@@ -20,6 +20,9 @@ VY_CONST = 2.7
 VX_CONST = 1
 A_CONST = 1
 GAME_SPD = 0.02
+FRAME_SPD = 0.02
+BULLET_VEL = 0.02
+GUN_TEMP = 10
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -40,8 +43,8 @@ def setup():
 		i+=2
 #----------------------------------------#
 
-def plot(x,y):
-	print("\033[" + str(x) + ";" + str(y) + "H" + "" + " ")
+def plot_text(y,x,string):
+	print("\033[" + str(x) + ";" + str(y) + "H" + Fore.WHITE + Fore.BLACK , string)
 
 #----------------------------------------#	
 
@@ -103,11 +106,8 @@ def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col
 
 #----------------------------------------#
 
-# def deploy_tokens():
-# 	fire_beam = []
-# 	for i in range(10):
-# 		fire_beam.append(Token(0,10,(i+1)*100))
-# 	return fire_beam
+def token_generator():
+	print("henlo")
 
 #----------------------------------------#
 
@@ -122,12 +122,33 @@ class Game():
 
 	def __init__(self,spd):
 		self.speed = spd
+		self.token_list = []
+		self.bullet_list = []
+		self.bullet_count = 0	# total shots fired
+		self.ammo = 10
 
 	def change_game_speed(self,new_spd):
 		self.speed = new_spd
 
 	def ret_game_speed(self):
 		return self.speed
+
+	def fire_bullet(self,player):
+		self.bullet_count += 1
+		bullet = Bullet(player.bound_R,player.pos_y,BULLET_VEL,self.bullet_count)
+		self.ammo -= 1
+		self.bullet_list.append(bullet)
+
+	def is_ammo(self):
+		if(self.ammo>0):
+			return True
+		else:
+			return False
+
+	def display_ammo(self):
+		plot_text(50,1,"                  ")
+		plot_text(50,1,"Ammo: "+str(self.ammo))
+
 
 #----------------------------------------#
 
@@ -186,6 +207,11 @@ class Kinitos(Entity):
 	def move_up(self):
 			self.vel_y -= 0.00006
 
+	def if_hit(self,tok):
+		for i in self.body_array:
+			if(tok.if_collision(i[0]+self.pos_x,i[1]+self.pos_y)):
+				return True
+
 #----------------------------------------#
 
 class Token(Entity):	# Fire beams, Magnets & COINS$$
@@ -193,6 +219,7 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
 		self.frame_loc = frame_loc
 		self.status = False
+		self.token_type = ""
 
 	def activate_token(self):
 		self.vel_x -= GAME_SPD
@@ -228,12 +255,40 @@ class Fire_Beam(Token):
 
 		if(angle==0):
 			for i in range(length):
-					self.body_array.append([i,0,"<","BLACK","RED"])
+				self.body_array.append([i,0,"<","BLACK","RED"])
 			self.bound_L = 0
-			self.bound_R = 10
+			self.bound_R = length
+
+		elif(angle==90):
+			for i in range(length):
+				self.body_array.append([i,0,"<","BLACK","RED"])
+			self.bound_L = 0
+			self.bound_R = 0
+
+		elif(angle==45):
+			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
+				for i in range(length):
+					self.body_array.append([i,i,"<","BLACK","RED"])
+			else:
+				for i in range(length):					# lower half
+					self.body_array.append([i,-1*i,"<","BLACK","RED"])
+
+			self.bound_L = 0
+			self.bound_R = length
+
 
 		# elif(angle==90):
 		# 	if()
+
+#----------------------------------------#
+
+class Coin(Token):
+	def __init__(self,frame_loc,y):
+		Token.__init__(self,frame_loc,y)
+		self.token_type = "coin"
+		self.reward = 10
+
+		self.body_array = [[0,0,"©","YELLOW",""]]
 
 #----------------------------------------#
 
@@ -241,11 +296,36 @@ class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
 		self.body_array = [[0,0," ","","BLUE"],[0,1," ","","MAGENTA"],[1,0," ","","MAGENTA"],[1,1," ","","BLUE"]]
+		self.treasure = 0
+		self.health = 3000
+		self.gun_temp = 0
 
-	def if_hit(self,tok):
-		for i in self.body_array:
-			if(tok.if_collision(i[0]+self.pos_x,i[1]+self.pos_y)):
-				return True
+	def display_treasure(self):
+		plot_text(100,1,"                  ")
+		plot_text(100,1,"Treasure: "+str(self.treasure))
+
+	def display_health(self):
+		plot_text(20,1,"                  ")
+		plot_text(20,1,"Health: "+str(self.health))
+
+	def fetch_gun_temp(self):
+		return self.gun_temp
+
+	def shots_fired(self):
+		self.gun_temp = GUN_TEMP
+
+	def gun_cooldown(self):
+		self.gun_temp -= GAME_SPD
+
+#----------------------------------------#
+
+class Bullet(Kinitos):
+	def __init__(self,x,y,vel,serial_no):
+		Kinitos.__init__(self,x,y)
+		self.serial_no = serial_no
+		self.body_array = [[0,0,"=","MAGENTA",""]]
+		self.damage = 1	
+		self.vel_x = vel # game vel already factored in 
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -257,52 +337,85 @@ game = Game(5)	# New game created
 
 ares = Player(30,10)
 
-token_list = []
-token_list.append(Fire_Beam(170,20,0,10))
-token_list.append(Fire_Beam(200,30,0,10))
-token_list.append(Fire_Beam(160,30,0,10))
+# token_list = []
+game.token_list.append(Fire_Beam(170,20,0,10))
+game.token_list.append(Fire_Beam(200,30,0,10))
+game.token_list.append(Fire_Beam(160,30,90,10))
+game.token_list.append(Fire_Beam(300,10,45,10))
+game.token_list.append(Fire_Beam(250,21,45,10))
+game.token_list.append(Fire_Beam(350,30,45,10))
+game.token_list.append(Coin(180,25))
+game.token_list.append(Coin(182,25))
+game.token_list.append(Coin(184,25))
+game.token_list.append(Coin(186,25))
+game.token_list.append(Coin(188,25))
+game.token_list.append(Coin(190,25))
+
+# token_list = token_generator()
+
 
 while(keyboard.is_pressed('b')==0):
 	pass
 	
 frame_L_pos = 0
-frame_R_pos = GAME_BOUNDARY_R - 3
+frame_R_pos = GAME_BOUNDARY_R - 2
 
 # GAME ON
 while(keyboard.is_pressed('z')==0):
 
-	for i in token_list:
+	for i in game.token_list:
 		if(i.frame_loc+i.bound_L<=frame_R_pos and i.frame_loc>frame_L_pos and i.status==False):
 			i.activate_token()
 		if(i.frame_loc+i.bound_R<=frame_L_pos and i.status==True):
 			i.deactivate_token()
 
-	for i in token_list:
+	for i in game.token_list:
 		if(i.status==True):
 			i.render()
 
+	for i in game.bullet_list:
+		i.update_pos()
+
 	ares.update_pos()
 	ares.update_vel()
+	ares.gun_cooldown()
 	ares.disp_vects()
+	ares.display_treasure()
+	ares.display_health()
 
-	for i in token_list:
+	game.display_ammo()
+
+	for i in game.token_list:
 		# if(i.status==True):
 		if(ares.if_hit(i)==True):
-			plot(40,40,'@',"GREEN","CYAN")
+			if(i.token_type=="coin"):
+				ares.treasure+=i.reward
+				game.token_list.remove(i)
+			elif(i.token_type=="fire_beam"):
+				ares.health-=i.damage
+
+	# for bullet in game.bullet_list:
+	# 	for tok in game.token_list:
+	# 		if(bullet.if_hit(tok)==True):
+	# 			if(tok.token_type=="fire_beam"):
+	# 				game.bullet_list.remove(bullet)
+	# 				game.token_list.remove(tok)
 
 	if(keyboard.is_pressed("w")):
 		ares.move_up()
 
+	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and game.is_ammo()):
+		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
+		game.fire_bullet(ares)
 
-	frame_L_pos+=(GAME_SPD)	# 1/game spd
-	frame_R_pos+=(GAME_SPD)	# 1/game spd
 
-	# print("L:", frame_L_pos, ", ", "R:", frame_R_pos)
+	frame_L_pos+=(FRAME_SPD)	# 1/game spd
+	frame_R_pos+=(FRAME_SPD)	# 1/game spd
 
-	time.sleep(0.001) 	# game 1/fps
+	time.sleep(0.00002/GAME_SPD) 	# game 1/fps
 # DED
 
-# print("QUIT? press q")
+
 while(keyboard.is_pressed('q')==0):
 	pass
 
