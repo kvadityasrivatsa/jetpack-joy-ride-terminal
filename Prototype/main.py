@@ -9,12 +9,12 @@ import math
 #								     | CONSTANTS |								      #
 #-------------------------------------------------------------------------------------#
 
-SCRN_WIDTH = 153
+SCRN_WIDTH = 153 # 153
 SCRN_HEIGHT = 40
 WALL_WIDTH = 4
 GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
-GAME_BOUNDARY_L = 28
+GAME_BOUNDARY_L = 2
 GAME_BOUNDARY_R = SCRN_WIDTH - 5
 VY_CONST = 2.7
 VX_CONST = 1
@@ -46,6 +46,9 @@ def plot(x,y):
 #----------------------------------------#	
 
 def plot(y,x,string,fore_col,back_col):
+
+	if(y < GAME_BOUNDARY_L or y > GAME_BOUNDARY_R):
+		return 0
 
 	if(fore_col == "BLACK"):
 		fore_col_str = Fore.BLACK
@@ -195,14 +198,14 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		self.vel_x -= GAME_SPD
 		self.pos_x = GAME_BOUNDARY_R
 		self.status = True
-		print("Token Activated")
+		# print("Token Activated")
 
 	def deactivate_token(self):
 		self.vel_x = 0
 		self.pos_x = 400
 		self.status = False
 		plot_obj(self,"clear")
-		print("Token Deactivated")
+		# print("Token Deactivated")
 
 	def if_collision(self,x,y):
 		for i in self.body_array:
@@ -222,9 +225,12 @@ class Fire_Beam(Token):
 		self.token_type = "fire_beam"
 		self.damage = 1
 		self.health = 1
+
 		if(angle==0):
 			for i in range(length):
 					self.body_array.append([i,0,"<","BLACK","RED"])
+			self.bound_L = 0
+			self.bound_R = 10
 
 		# elif(angle==90):
 		# 	if()
@@ -249,10 +255,12 @@ setup()
 
 game = Game(5)	# New game created
 
-ares = Player(80,10)
+ares = Player(30,10)
 
 token_list = []
 token_list.append(Fire_Beam(170,20,0,10))
+token_list.append(Fire_Beam(200,30,0,10))
+token_list.append(Fire_Beam(160,30,0,10))
 
 while(keyboard.is_pressed('b')==0):
 	pass
@@ -264,9 +272,9 @@ frame_R_pos = GAME_BOUNDARY_R - 3
 while(keyboard.is_pressed('z')==0):
 
 	for i in token_list:
-		if(i.frame_loc<=frame_R_pos and i.status==False):
+		if(i.frame_loc+i.bound_L<=frame_R_pos and i.frame_loc>frame_L_pos and i.status==False):
 			i.activate_token()
-		if(i.frame_loc<=frame_L_pos and i.status==True):
+		if(i.frame_loc+i.bound_R<=frame_L_pos and i.status==True):
 			i.deactivate_token()
 
 	for i in token_list:
@@ -291,7 +299,7 @@ while(keyboard.is_pressed('z')==0):
 
 	# print("L:", frame_L_pos, ", ", "R:", frame_R_pos)
 
-	time.sleep(0.01) 	# game 1/fps
+	time.sleep(0.001) 	# game 1/fps
 # DED
 
 # print("QUIT? press q")
