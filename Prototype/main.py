@@ -22,7 +22,7 @@ A_CONST = 1
 GAME_SPD = 0.02
 FRAME_SPD = 0.02
 BULLET_VEL = 0.02
-GUN_TEMP = 10
+GUN_TEMP = 50
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -33,13 +33,13 @@ def setup():
 	colorama.init()
 	for j in range(SCRN_WIDTH):
 		for i in range(SCRN_HEIGHT):
-			plot(i,j," ","","BLACK")
+			plot(i,j," ","","BLACK","NORMAL")
 	print("\033[2J" + "\033[0;0H")
 
 	i=0
 	while(i<=SCRN_WIDTH-4):
-		plot(i,GAME_BOUNDARY_D+1,"[]","BLUE","")
-		plot(i,WALL_WIDTH,"[]","BLUE","")
+		plot(i,GAME_BOUNDARY_D+1,"[]","BLUE","","NORMAL")
+		plot(i,WALL_WIDTH,"[]","BLUE","","NORMAL")
 		i+=2
 #----------------------------------------#
 
@@ -48,7 +48,7 @@ def plot_text(y,x,string):
 
 #----------------------------------------#	
 
-def plot(y,x,string,fore_col,back_col):
+def plot(y,x,string,fore_col,back_col,style):
 
 	if(y < GAME_BOUNDARY_L or y > GAME_BOUNDARY_R):
 		return 0
@@ -91,18 +91,25 @@ def plot(y,x,string,fore_col,back_col):
 	else:
 		back_col_str = ""
 
-	print("\033[" + str(int(x)) + ";" + str(int(y)) + "H" + fore_col_str + back_col_str + string)
+	if(style == "NORMAL"):
+		style_str = Style.NORMAL
+	elif(style == "BRIGHT"):
+		style_str = Style.BRIGHT
+	elif(style == "DIM"):
+		style_str = Style.DIM
+	else:
+		style_str = ""
+
+	print("\033[" + str(int(x)) + ";" + str(int(y)) + "H" + fore_col_str + back_col_str + style_str + string)
 
 def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col,back_col)
 	
 	if(mode=="plot"):
 		for i in obj.body_array:
-			plot(obj.pos_x+i[0],obj.pos_y+i[1],i[2],i[3],i[4])
-		  	# plot(obj.pos_x, obj.pos_y, " ", "", "YELLOW")
+			plot(obj.pos_x+i[0],obj.pos_y+i[1],i[2],i[3],i[4],i[5])
 	elif(mode=="clear"):
 		for i in obj.body_array:
-			plot(obj.pos_x+i[0],obj.pos_y+i[1]," ","","BLACK")
-			# plot(obj.pos_x, obj.pos_y, " ", "", "YELLOW")
+			plot(obj.pos_x+i[0],obj.pos_y+i[1]," ","","BLACK","NORMAL")
 
 #----------------------------------------#
 
@@ -112,7 +119,7 @@ def token_generator():
 #----------------------------------------#
 
 def terminate():
-	plot(SCRN_HEIGHT,0,"","","")
+	plot(SCRN_HEIGHT,0,"","","","")
 
 #-------------------------------------------------------------------------------------#
 #								    | CLASSES |								          #
@@ -177,15 +184,15 @@ class Entity():
 		self.bound_R = 0
 
 	def render_test(self):
-		plot(self.pos_x, self.pos_y, " ", "", "BLUE")
+		plot(self.pos_x, self.pos_y, " ", "", "BLUE","NORMAL")
 
 	def define_pos(self,x,y):
-		plot(self.pos_x, self.pos_y, " ", "", "BLACK")
+		plot(self.pos_x, self.pos_y, " ", "", "BLACK","NORMAL")
 		self.pos_x = x
 		self.pos_y = y
 
 	def disp_vects(self):
-		plot(0,0,"vel="+str(self.vel_y)+" acc_y="+str(self.acc_y), "WHITE", "BLACK")
+		plot(0,0,"vel="+str(self.vel_y)+" acc_y="+str(self.acc_y), "WHITE", "BLACK", "NORMAL")
 
 #----------------------------------------#
 
@@ -264,27 +271,27 @@ class Fire_Beam(Token):
 
 		if(angle==0):
 			for i in range(length):
-				self.body_array.append([i,0,"<","BLACK","RED"])
+				self.body_array.append([i,0,"<","BLACK","RED","NORMAL"])
 			self.bound_L = 0
 			self.bound_R = length
 
 		elif(angle==90):
 			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
 				for i in range(length):
-					self.body_array.append([0,i,"<","BLACK","RED"])
+					self.body_array.append([0,i,"<","BLACK","RED","NORMAL"])
 			else:
 				for i in range(length):
-					self.body_array.append([0,-1*i,"<","BLACK","RED"])
+					self.body_array.append([0,-1*i,"<","BLACK","RED","NORMAL"])
 			self.bound_L = 0
 			self.bound_R = 0
 
 		elif(angle==45):
 			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
 				for i in range(length):
-					self.body_array.append([i,i,"<","BLACK","RED"])
+					self.body_array.append([i,i,"<","BLACK","RED","NORMAL"])
 			else:
 				for i in range(length):					# lower half
-					self.body_array.append([i,-1*i,"<","BLACK","RED"])
+					self.body_array.append([i,-1*i,"<","BLACK","RED","NORMAL"])
 
 			self.bound_L = 0
 			self.bound_R = length
@@ -301,14 +308,14 @@ class Coin(Token):
 		self.token_type = "coin"
 		self.reward = 10
 
-		self.body_array = [[0,0,"©","YELLOW",""]]
+		self.body_array = [[0,0,"©","YELLOW","","BRIGHT"]]
 
 #----------------------------------------#
 
 class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
-		self.body_array = [[0,0," ","","BLUE"],[0,1," ","","MAGENTA"],[1,0," ","","MAGENTA"],[1,1," ","","BLUE"]]
+		self.body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
 		self.treasure = 0
 		self.health = 3000
 		self.gun_temp = 0
@@ -336,7 +343,7 @@ class Bullet(Kinitos):
 	def __init__(self,x,y,vel,serial_no):
 		Kinitos.__init__(self,x,y)
 		self.serial_no = serial_no
-		self.body_array = [[0,0,"=","MAGENTA",""]]
+		self.body_array = [[0,0,"=","WHITE","","BRIGHT"]]
 		self.damage = 1	
 		self.vel_x = vel # game vel already factored in 
 
