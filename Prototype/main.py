@@ -133,6 +133,7 @@ class Game():
 		self.bullet_list = []
 		self.bullet_count = 0	# total shots fired
 		self.ammo = 10
+		self.mode = "NORMAL"
 
 	def change_game_speed(self,new_spd):
 		self.speed = new_spd
@@ -339,6 +340,38 @@ class Player(Kinitos):
 
 #----------------------------------------#
 
+class Demogorgon(Kinitos):
+	def __init__(self,x,y):
+		Kinitos.__init__(self,x,y)
+		self.body_array = [[0,0," ","","RED","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","RED","NORMAL"]]
+		self.health = 3000
+		self.gun_temp = 0
+		self.status = False
+		self.vel_y = 0.08 # this is abs acc_y, dir is given in update_vel acc to player_x
+
+	def if_hit(self,bullet):	# not akin to Kinitos.if_hit() which expects a token
+		for i in self.body_array:
+			if(bullet.if_hit(i[0]+self.pos_x,i[1]+self.pos_y)):
+				return True
+
+	def update_pos(self,player_x,player_y):
+		plot_obj(self,"clear")
+
+		if(player_y < self.pos_y):
+			self.pos_y -= self.vel_y*(abs(player_y-self.pos_y)+0)*0.04
+		else:
+			self.pos_y += self.vel_y*(abs(player_y-self.pos_y)+0)*0.04
+
+		plot_obj(self,"plot")
+		if(self.pos_y>GAME_BOUNDARY_D):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_D
+		elif(self.pos_y<GAME_BOUNDARY_U):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_U
+
+#----------------------------------------#
+
 class Bullet(Kinitos):
 	def __init__(self,x,y,vel,serial_no):
 		Kinitos.__init__(self,x,y)
@@ -356,6 +389,7 @@ setup()
 game = Game(5)	# New game created
 
 ares = Player(30,10)
+hades = Demogorgon(145,20)
 
 # token_list = []
 game.token_list.append(Fire_Beam(160,20,0,10))
@@ -365,7 +399,6 @@ game.token_list.append(Fire_Beam(220,10,45,10))
 game.token_list.append(Fire_Beam(240,21,45,10))
 game.token_list.append(Fire_Beam(260,30,45,10))
 game.token_list.append(Fire_Beam(280,10,90,20))
-game.token_list.append(Fire_Beam(300,40,90,20))
 game.token_list.append(Coin(180,25))
 game.token_list.append(Coin(182,25))
 game.token_list.append(Coin(184,25))
@@ -383,17 +416,50 @@ frame_L_pos = 0
 frame_R_pos = GAME_BOUNDARY_R - 2
 
 # GAME ON
+#========================================================================
+#========================================================================
+
 while(keyboard.is_pressed('z')==0):
 
-	for i in game.token_list:
-		if(i.frame_loc+i.bound_L<=frame_R_pos and i.frame_loc>frame_L_pos and i.status==False):
-			i.activate_token()
-		if(i.frame_loc+i.bound_R<=frame_L_pos and i.status==True):
-			i.deactivate_token()
+	if(game.mode=="NORMAL"):
 
-	for i in game.token_list:
-		if(i.status==True):
-			i.render()
+		for i in game.token_list:
+			if(i.frame_loc+i.bound_L<=frame_R_pos and i.frame_loc>frame_L_pos and i.status==False):
+				i.activate_token()
+			if(i.frame_loc+i.bound_R<=frame_L_pos and i.status==True):
+				i.deactivate_token()
+
+		for i in game.token_list:
+			if(i.status==True):
+				i.render()
+
+		for i in game.token_list:
+			if(i.status==True):
+				if(ares.if_hit(i)==True):
+					if(i.token_type=="coin"):
+						ares.treasure+=i.reward
+						game.token_list.remove(i)
+					elif(i.token_type=="fire_beam"):
+						ares.health-=i.damage
+
+		for bullet in game.bullet_list:
+			for tok in game.token_list:
+				if(tok.status==True):
+					if(tok.token_type=="fire_beam"):
+						if(bullet.if_hit(tok)==True):
+							tok.redact()	# erase fire beam from screen
+							game.bullet_list.remove(bullet)
+							game.token_list.remove(tok)
+
+	elif(game.mode=="DEMOGORGON"):
+
+		# for bullet in game.bullet_list:
+		# 	if(hades.if_hit(bullet)==True):
+		# 		hades.hit()
+		hades.update_pos(ares.pos_x,ares.pos_y)
+		# print(hades.pos_y,hades.vel_y,hades.acc_y)
+
+#*******************************************************************************
 
 	for i in game.bullet_list:
 		if(game.bullet_out(i)):
@@ -410,23 +476,7 @@ while(keyboard.is_pressed('z')==0):
 
 	game.display_ammo()
 
-	for i in game.token_list:
-		if(i.status==True):
-			if(ares.if_hit(i)==True):
-				if(i.token_type=="coin"):
-					ares.treasure+=i.reward
-					game.token_list.remove(i)
-				elif(i.token_type=="fire_beam"):
-					ares.health-=i.damage
 
-	for bullet in game.bullet_list:
-		for tok in game.token_list:
-			if(tok.status==True):
-				if(tok.token_type=="fire_beam"):
-					if(bullet.if_hit(tok)==True):
-						tok.redact()	# erase fire beam from screen
-						game.bullet_list.remove(bullet)
-						game.token_list.remove(tok)
 
 	if(keyboard.is_pressed("w")):
 		ares.move_up()
@@ -436,10 +486,19 @@ while(keyboard.is_pressed('z')==0):
 		game.fire_bullet(ares)
 
 
+	print(int(frame_L_pos),int(frame_R_pos))
+
 	frame_L_pos+=(FRAME_SPD)	# 1/game spd
 	frame_R_pos+=(FRAME_SPD)	# 1/game spd
 
+	if(frame_R_pos > 400 and hades.status==False):
+		hades.status==True
+		game.mode = "DEMOGORGON"
+
 	time.sleep(0.00002/GAME_SPD) 	# game 1/fps
+
+#========================================================================
+#========================================================================
 # DED
 
 
