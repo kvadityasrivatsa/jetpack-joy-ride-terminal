@@ -16,6 +16,8 @@ GAME_BOUNDARY_U = 6
 GAME_BOUNDARY_D = SCRN_HEIGHT-WALL_WIDTH+1
 GAME_BOUNDARY_L = 2
 GAME_BOUNDARY_R = SCRN_WIDTH - 5
+PLAYER_BOUND_L = 2
+PLAYER_BOUND_R = 120
 VY_CONST = 2.7
 VX_CONST = 1
 A_CONST = 1
@@ -113,8 +115,8 @@ def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col
 
 #----------------------------------------#
 
-def token_generator():
-	print("henlo")
+def dist(x1,y1,x2,y2):
+	return abs(math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))
 
 #----------------------------------------#
 
@@ -130,9 +132,6 @@ class Game():
 	def __init__(self,spd):
 		self.speed = spd
 		self.token_list = []
-		self.bullet_list = []
-		self.bullet_count = 0	# total shots fired
-		self.ammo = 20
 		self.mode = "NORMAL"
 
 	def change_game_speed(self,new_spd):
@@ -140,28 +139,6 @@ class Game():
 
 	def ret_game_speed(self):
 		return self.speed
-
-	def fire_bullet(self,player):
-		self.bullet_count += 1
-		bullet = Bullet(player.bound_R+player.pos_x+1,player.pos_y,BULLET_VEL,self.bullet_count)
-		self.ammo -= 1
-		self.bullet_list.append(bullet)
-
-	def is_ammo(self):
-		if(self.ammo>0):
-			return True
-		else:
-			return False
-
-	def display_ammo(self):
-		plot_text(50,1,"                  ")
-		plot_text(50,1,"Ammo: "+str(self.ammo))
-
-	def bullet_out(self,bullet):
-		if(bullet.pos_x>GAME_BOUNDARY_R):
-			return True
-		else:
-			return False
 
 
 #----------------------------------------#
@@ -201,10 +178,12 @@ class Kinitos(Entity):
 	def __init__(self,x,y):
 		Entity.__init__(self,x,y)
 		self.damage = 0
+		self.move_left_val = 0
+		self.move_right_val = 0
 
 	def update_pos(self):
 		plot_obj(self,"clear")
-		self.pos_x = self.pos_x + self.vel_x*VX_CONST
+		self.pos_x = self.pos_x + self.vel_x*VX_CONST + self.move_left_val + self.move_right_val
 		self.pos_y = self.pos_y + self.vel_y*VY_CONST
 		if(self.pos_y>GAME_BOUNDARY_D):
 			self.vel_y=0
@@ -212,13 +191,26 @@ class Kinitos(Entity):
 		elif(self.pos_y<GAME_BOUNDARY_U):
 			self.vel_y=0
 			self.pos_y=GAME_BOUNDARY_U
+		elif(self.pos_x>PLAYER_BOUND_R):
+			self.pos_x=PLAYER_BOUND_R
+		elif(self.pos_x<PLAYER_BOUND_L):
+			self.pos_x=PLAYER_BOUND_L
+
 		plot_obj(self,"plot")
+		self.move_left_val=0 	# both get reset at the end of each iteration
+		self.move_right_val=0
 
 	def update_vel(self):
 		self.vel_y -= self.acc_y*A_CONST
 
 	def move_up(self):
-			self.vel_y -= 0.00006
+		self.vel_y -= 0.00006
+
+	def move_left(self):
+		self.move_left_val = -0.024
+
+	def move_right(self):
+		self.move_right_val = 0.024
 
 	def if_hit_token(self,tok):
 		for i in self.body_array:
@@ -324,9 +316,17 @@ class Player(Kinitos):
 		self.acc_y += -1 * self.gravity
 
 		self.body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
+		self.bound_L = 0
+		self.bound_R = 1
+
 		self.treasure = 0
 		self.health = 3000
 		self.gun_temp = 0
+		self.ammo = 20
+		self.bullet_count = 0
+		self.bullet_list = []
+
+		self.mag_inf_status = False
 
 	def display_treasure(self):
 		plot_text(100,1,"                  ")
@@ -345,12 +345,53 @@ class Player(Kinitos):
 	def gun_cooldown(self):
 		self.gun_temp -= GAME_SPD
 
+	def fire_bullet(self,player):	# keeps track of the unique serial no. of every quasar
+		self.bullet_count += 1
+		bullet = Bullet(player.bound_R+player.pos_x+1,player.pos_y,BULLET_VEL,self.bullet_count)
+		self.ammo -= 1
+		self.bullet_list.append(bullet)
+
+	def is_ammo(self):
+		if(self.ammo>0):
+			return True
+		else:
+			return False
+
+	def display_ammo(self):
+		plot_text(50,1,"                  ")
+		plot_text(50,1,"Ammo: "+str(self.ammo))
+
+	def bullet_out(self,bullet):
+		if(bullet.pos_x>GAME_BOUNDARY_R):
+			return True
+		else:
+			return False
+
+	def magnet_influence(self,magnet):
+		distance = dist(self.pos_x,self.pos_y,magnet.pos_x,magnet.pos_y)
+		# print("distance:",distance)
+		if(distance<=10):
+			mag_vel_x = (magnet.pos_x - self.pos_x)/distance
+			mag_vel_y = (magnet.pos_y - self.pos_y)/distance
+			# print("Active")
+			
+			self.vel_x += mag_vel_x*magnet.MAG_VEL
+			self.vel_y += mag_vel_y*magnet.MAG_VEL
+			# plot_text(0,10,"mag_vel_x:"+str(mag_vel_x)+"mag_vel_y:"+str(mag_vel_y)+"self.vel_x"+str(self.vel_x)+"self.vel_y"+str(self.vel_y))
+		else:
+			# print("Inactive")
+			self.vel_x = 0
+
 #----------------------------------------#
 
 class Demogorgon(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
+
 		self.body_array = [[0,0," ","","RED","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","RED","NORMAL"]]
+		self.bound_L = 0
+		self.bound_R = 1
+
 		self.health = 3000
 		self.gun_temp = 0
 		self.status = False
@@ -381,7 +422,7 @@ class Demogorgon(Kinitos):
 
 	def fire_quasar(self):
 		self.quasar_list.append(Quasar(140,self.pos_y,-1*BULLET_VEL,self.quasar_count))
-		self.quasar_count += 1
+		self.quasar_count += 1 # keeps track of the unique serial no. of every quasar
 		self.blaster_temp = 5
 
 	def rain_fire(self,player_x,player_y):
@@ -405,7 +446,7 @@ class Bullet(Kinitos):
 		Kinitos.__init__(self,x,y)
 		self.serial_no = serial_no
 		self.body_array = [[0,0,"=","WHITE","","BRIGHT"]]
-		self.damage = 1	
+		self.damage = 500
 		self.vel_x = vel # game vel already factored in 
 
 #----------------------------------------#
@@ -415,8 +456,22 @@ class Quasar(Kinitos):
 		Kinitos.__init__(self,x,y)
 		self.serial_no = serial_no
 		self.body_array = [[0,0,"@","CYAN","","BRIGHT"]]
-		self.damage = 1	
+		self.damage = 500
 		self.vel_x = vel # game vel already factored in 
+
+#----------------------------------------#
+
+class Magnet(Token):
+	def __init__(self,frame_loc,y):
+		Token.__init__(self,frame_loc,y)
+		self.token_type = "magnet"
+
+		self.body_array = [[0,0,"M","","RED","NORMAL"],[0,1,"M","","WHITE","NORMAL"],[1,0,"M","","WHITE","NORMAL"],[1,1,"M","","RED","NORMAL"]]
+		self.bound_L = 0
+		self.bound_R = 1
+
+		self.MAG_VEL = 0.001
+
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -429,7 +484,7 @@ game = Game(5)	# New game created
 ares = Player(30,10)
 hades = Demogorgon(145,20)
 
-# token_list = []
+token_list = []
 game.token_list.append(Fire_Beam(160,20,0,10))
 game.token_list.append(Fire_Beam(180,30,0,10))
 game.token_list.append(Fire_Beam(200,30,90,10))
@@ -443,8 +498,7 @@ game.token_list.append(Coin(184,25))
 game.token_list.append(Coin(186,25))
 game.token_list.append(Coin(188,25))
 game.token_list.append(Coin(190,25))
-
-# token_list = token_generator()
+game.token_list.append(Magnet(175,20))
 
 hades.quasar_list.append(Quasar(140,20,-0.02,139))
 
@@ -462,44 +516,52 @@ while(keyboard.is_pressed('z')==0):
 
 	if(game.mode=="NORMAL"):
 
-		for i in game.token_list:
-			if(i.frame_loc+i.bound_L<=frame_R_pos and i.frame_loc>frame_L_pos and i.status==False):
-				i.activate_token()
-			if(i.frame_loc+i.bound_R<=frame_L_pos and i.status==True):
-				i.deactivate_token()
+		ares.disp_vects()
 
-		for i in game.token_list:
-			if(i.status==True):
-				i.render()
+		for tok in game.token_list:	# Token activation
+			if(tok.frame_loc+tok.bound_L<=frame_R_pos and tok.frame_loc>frame_L_pos and tok.status==False):
+				tok.activate_token()
+			if(tok.frame_loc+tok.bound_R<=frame_L_pos and tok.status==True):
+				tok.deactivate_token()
 
-		for i in game.token_list:
-			if(i.status==True):
-				if(ares.if_hit_token(i)==True):
-					if(i.token_type=="coin"):
-						ares.treasure+=i.reward
-						game.token_list.remove(i)
-					elif(i.token_type=="fire_beam"):
-						ares.health-=i.damage
+		for tok in game.token_list:	# Token rendering
+			if(tok.status==True):
+				tok.render()
 
-		for bullet in game.bullet_list:
+		for tok in game.token_list:		# Token interaction
+			if(tok.status==True):	
+				if(tok.token_type=="coin"):
+					if(ares.if_hit_token(tok)==True):
+						ares.treasure+=tok.reward
+						game.token_list.remove(tok)
+				elif(tok.token_type=="fire_beam"):
+					if(ares.if_hit_token(tok)==True):
+						ares.health-=tok.damage
+				elif(tok.token_type=="magnet"):
+					ares.magnet_influence(tok)
+
+
+		for bullet in ares.bullet_list:	# if bullets shot by ares hit a fire beam
 			for tok in game.token_list:
 				if(tok.status==True):
 					if(tok.token_type=="fire_beam"):
 						if(bullet.if_hit_token(tok)==True):
 							tok.redact()	# erase fire beam from screen
-							game.bullet_list.remove(bullet)
+							ares.bullet_list.remove(bullet)
 							game.token_list.remove(tok)
+							ares.treasure += 100
 
 	elif(game.mode=="DEMOGORGON"):
 
-		for bullet in game.bullet_list:
+		for bullet in ares.bullet_list:
 			if(bullet.if_hit_kinitos(hades)==True):
-				hades.hit_confirmed(bullet)
-				game.bullet_list.remove(bullet)
+				hades.hit_confirmed(bullet)	# hades hit by bullets shot by ares
+				ares.bullet_list.remove(bullet)
+				ares.treasure += 100
 
 		for quasar in hades.quasar_list:
 		  	if(quasar.if_hit_kinitos(ares)==True):
-		  		ares.hit_confirmed(quasar)
+		  		ares.hit_confirmed(quasar)	# ares hit by bullets shot by hades
 		  		hades.quasar_list.remove(quasar)
 
 
@@ -516,9 +578,9 @@ while(keyboard.is_pressed('z')==0):
 
 #*******************************************************************************
 
-	for i in game.bullet_list:
-		if(game.bullet_out(i)):
-			game.bullet_list.remove(i) # if bullet gone out of scope
+	for i in ares.bullet_list:
+		if(ares.bullet_out(i)):
+			ares.bullet_list.remove(i) # if bullet gone out of scope
 		else:
 			i.update_pos()
 
@@ -528,17 +590,18 @@ while(keyboard.is_pressed('z')==0):
 	ares.disp_vects()
 	ares.display_treasure()
 	ares.display_health()
-
-	game.display_ammo()
-
-
+	ares.display_ammo()
 
 	if(keyboard.is_pressed("w")):
 		ares.move_up()
+	if(keyboard.is_pressed("a")):
+		ares.move_left()
+	if(keyboard.is_pressed("d")):
+		ares.move_right()
 
-	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and game.is_ammo()):
+	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and ares.is_ammo()):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
-		game.fire_bullet(ares)
+		ares.fire_bullet(ares)
 
 
 	print(int(frame_L_pos),int(frame_R_pos))
