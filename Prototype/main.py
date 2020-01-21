@@ -22,7 +22,7 @@ A_CONST = 1
 GAME_SPD = 0.02
 FRAME_SPD = 0.02
 BULLET_VEL = 0.02
-GUN_TEMP = 50
+GUN_TEMP = 5
 
 #-------------------------------------------------------------------------------------#
 #								      | METHODS |								      #
@@ -132,7 +132,7 @@ class Game():
 		self.token_list = []
 		self.bullet_list = []
 		self.bullet_count = 0	# total shots fired
-		self.ammo = 10
+		self.ammo = 20
 		self.mode = "NORMAL"
 
 	def change_game_speed(self,new_spd):
@@ -200,8 +200,7 @@ class Entity():
 class Kinitos(Entity):
 	def __init__(self,x,y):
 		Entity.__init__(self,x,y)
-		self.gravity = 0.00002
-		self.acc_y += -1 * self.gravity
+		self.damage = 0
 
 	def update_pos(self):
 		plot_obj(self,"clear")
@@ -221,10 +220,19 @@ class Kinitos(Entity):
 	def move_up(self):
 			self.vel_y -= 0.00006
 
-	def if_hit(self,tok):
+	def if_hit_token(self,tok):
 		for i in self.body_array:
 			if(tok.if_collision(i[0]+self.pos_x,i[1]+self.pos_y)):
 				return True
+
+	def if_hit_kinitos(self,kino):	# if bullet hits a kinito
+		for i in self.body_array:
+			for j in kino.body_array:
+				if(int(kino.pos_x + j[0]) == int(self.pos_x + i[0]) and int(kino.pos_y + j[1]) == int(self.pos_y + i[1])):
+					return True
+
+	def hit_confirmed(self,kino): # kino(agent) here may be a bullet or a quasar
+		self.health -= kino.damage
 
 #----------------------------------------#
 
@@ -297,10 +305,6 @@ class Fire_Beam(Token):
 			self.bound_L = 0
 			self.bound_R = length
 
-
-		# elif(angle==90):
-		# 	if()
-
 #----------------------------------------#
 
 class Coin(Token):
@@ -316,6 +320,9 @@ class Coin(Token):
 class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
+		self.gravity = 0.00002
+		self.acc_y += -1 * self.gravity
+
 		self.body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
 		self.treasure = 0
 		self.health = 3000
@@ -348,11 +355,13 @@ class Demogorgon(Kinitos):
 		self.gun_temp = 0
 		self.status = False
 		self.vel_y = 0.08 # this is abs acc_y, dir is given in update_vel acc to player_x
+		self.quasar_list = []
+		self.quasar_count = 0
+		self.blaster_temp = 0
 
-	def if_hit(self,bullet):	# not akin to Kinitos.if_hit() which expects a token
-		for i in self.body_array:
-			if(bullet.if_hit(i[0]+self.pos_x,i[1]+self.pos_y)):
-				return True
+	def display_health(self):
+		plot_text(70,1,"                  ")
+		plot_text(70,1,"DD Health: "+str(self.health))
 
 	def update_pos(self,player_x,player_y):
 		plot_obj(self,"clear")
@@ -370,6 +379,25 @@ class Demogorgon(Kinitos):
 			self.vel_y=0
 			self.pos_y=GAME_BOUNDARY_U
 
+	def fire_quasar(self):
+		self.quasar_list.append(Quasar(140,self.pos_y,-1*BULLET_VEL,self.quasar_count))
+		self.quasar_count += 1
+		self.blaster_temp = 5
+
+	def rain_fire(self,player_x,player_y):
+		if(abs(self.pos_y - player_y)<3 and self.blaster_temp < 1):
+			# print("shots fired")
+			self.fire_quasar()
+
+	def quasar_out(self,quasar):
+		if(quasar.pos_x<GAME_BOUNDARY_L):
+			return True
+		else:
+			return False
+
+	def blaster_cooldown(self):
+		self.blaster_temp -= 0.01
+
 #----------------------------------------#
 
 class Bullet(Kinitos):
@@ -377,6 +405,16 @@ class Bullet(Kinitos):
 		Kinitos.__init__(self,x,y)
 		self.serial_no = serial_no
 		self.body_array = [[0,0,"=","WHITE","","BRIGHT"]]
+		self.damage = 1	
+		self.vel_x = vel # game vel already factored in 
+
+#----------------------------------------#
+
+class Quasar(Kinitos):
+	def __init__(self,x,y,vel,serial_no):
+		Kinitos.__init__(self,x,y)
+		self.serial_no = serial_no
+		self.body_array = [[0,0,"@","CYAN","","BRIGHT"]]
 		self.damage = 1	
 		self.vel_x = vel # game vel already factored in 
 
@@ -408,6 +446,7 @@ game.token_list.append(Coin(190,25))
 
 # token_list = token_generator()
 
+hades.quasar_list.append(Quasar(140,20,-0.02,139))
 
 while(keyboard.is_pressed('b')==0):
 	pass
@@ -435,7 +474,7 @@ while(keyboard.is_pressed('z')==0):
 
 		for i in game.token_list:
 			if(i.status==True):
-				if(ares.if_hit(i)==True):
+				if(ares.if_hit_token(i)==True):
 					if(i.token_type=="coin"):
 						ares.treasure+=i.reward
 						game.token_list.remove(i)
@@ -446,18 +485,34 @@ while(keyboard.is_pressed('z')==0):
 			for tok in game.token_list:
 				if(tok.status==True):
 					if(tok.token_type=="fire_beam"):
-						if(bullet.if_hit(tok)==True):
+						if(bullet.if_hit_token(tok)==True):
 							tok.redact()	# erase fire beam from screen
 							game.bullet_list.remove(bullet)
 							game.token_list.remove(tok)
 
 	elif(game.mode=="DEMOGORGON"):
 
-		# for bullet in game.bullet_list:
-		# 	if(hades.if_hit(bullet)==True):
-		# 		hades.hit()
+		for bullet in game.bullet_list:
+			if(bullet.if_hit_kinitos(hades)==True):
+				hades.hit_confirmed(bullet)
+				game.bullet_list.remove(bullet)
+
+		for quasar in hades.quasar_list:
+		  	if(quasar.if_hit_kinitos(ares)==True):
+		  		ares.hit_confirmed(quasar)
+		  		hades.quasar_list.remove(quasar)
+
+
+		for quasar in hades.quasar_list:
+			if(hades.quasar_out(quasar)):
+				hades.quasar_list.remove(quasar)	# if bullet gone out of scope
+			else:
+				quasar.update_pos()
+
 		hades.update_pos(ares.pos_x,ares.pos_y)
-		# print(hades.pos_y,hades.vel_y,hades.acc_y)
+		hades.rain_fire(ares.pos_x,ares.pos_y)
+		hades.blaster_cooldown()
+		hades.display_health()
 
 #*******************************************************************************
 
@@ -491,7 +546,7 @@ while(keyboard.is_pressed('z')==0):
 	frame_L_pos+=(FRAME_SPD)	# 1/game spd
 	frame_R_pos+=(FRAME_SPD)	# 1/game spd
 
-	if(frame_R_pos > 400 and hades.status==False):
+	if(frame_R_pos > 450 and hades.status==False):
 		hades.status==True
 		game.mode = "DEMOGORGON"
 
