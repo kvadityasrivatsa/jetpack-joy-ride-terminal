@@ -18,6 +18,8 @@ class Game():
 		self.__token_list = []
 		self.__mode = "NORMAL"
 		self.__boost_temp = 0
+		self.__frame_L_pos = 0
+		self.__frame_R_pos = const.GAME_BOUNDARY_R - 2
 
 	###############################
 
@@ -41,6 +43,16 @@ class Game():
 
 	def remove_token_list(self,token):
 		self.__token_list.remove(token)
+
+	def get_frame_L_pos(self):
+		return self.__frame_L_pos
+
+	def get_frame_R_pos(self):
+		return self.__frame_R_pos
+
+	def update_frames(self):
+		self.__frame_L_pos += self.__speed
+		self.__frame_R_pos += self.__speed
 
 	###############################
 
@@ -99,6 +111,44 @@ class Game():
 			# else:						# nothing
 			# 	tok_pos_x += random.randrange(0,10)
 
+	def pause(self):
+		method.plot(50,10,"                                                                                           ","WHITE","YELLOW","NORMAL")
+		method.plot(50,11,"  ██████╗  █████╗ ███╗   ███╗███████╗    ██████╗  █████╗ ██╗   ██╗███████╗███████╗██████╗  ","WHITE","YELLOW","NORMAL")
+		method.plot(50,12," ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗ ","WHITE","YELLOW","NORMAL")
+		method.plot(50,13," ██║  ███╗███████║██╔████╔██║█████╗      ██████╔╝███████║██║   ██║███████╗█████╗  ██║  ██║ ","WHITE","YELLOW","NORMAL")
+		method.plot(50,14," ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██╔═══╝ ██╔══██║██║   ██║╚════██║██╔══╝  ██║  ██║ ","WHITE","YELLOW","NORMAL")
+		method.plot(50,15," ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ██║     ██║  ██║╚██████╔╝███████║███████╗██████╔╝ ","WHITE","YELLOW","NORMAL")
+		method.plot(50,16,"  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═════╝  ","WHITE","YELLOW","NORMAL")
+		method.plot(50,17,"                                                                                           ","WHITE","YELLOW","NORMAL")
+		while(keyboard.is_pressed("n")==False):	# resume on 'n'
+			pass
+		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))
+
+	def over(self):
+		method.plot(55,10,"                                                                            ","WHITE","RED","BRIGHT")
+		method.plot(55,11,"  ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗  ","WHITE","RED","BRIGHT")
+		method.plot(55,12," ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗ ","WHITE","RED","BRIGHT")
+		method.plot(55,13," ██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝ ","WHITE","RED","BRIGHT")
+		method.plot(55,14," ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗ ","WHITE","RED","BRIGHT")
+		method.plot(55,15," ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║ ","WHITE","RED","BRIGHT")
+		method.plot(55,16,"  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝ ","WHITE","RED","BRIGHT")
+		method.plot(55,17,"                                                                            ","WHITE","RED","BRIGHT")
+		while(keyboard.is_pressed("n")==False):	# resume on 'n'
+			pass
+		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))	
+
+	def win(self):
+		method.plot(65,10,"                                                        ","WHITE","GREEN","BRIGHT")
+		method.plot(65,11," ██╗   ██╗ ██████╗ ██╗   ██╗    ██╗    ██╗██╗███╗   ██╗ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,12," ╚██╗ ██╔╝██╔═══██╗██║   ██║    ██║    ██║██║████╗  ██║ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,13,"  ╚████╔╝ ██║   ██║██║   ██║    ██║ █╗ ██║██║██╔██╗ ██║ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,14,"   ╚██╔╝  ██║   ██║██║   ██║    ██║███╗██║██║██║╚██╗██║ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,15,"    ██║   ╚██████╔╝╚██████╔╝    ╚███╔███╔╝██║██║ ╚████║ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,16,"    ╚═╝    ╚═════╝  ╚═════╝      ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝ ","WHITE","GREEN","BRIGHT")
+		method.plot(65,17,"                                                        ","WHITE","GREEN","BRIGHT")
+		while(keyboard.is_pressed("n")==False):	# resume on 'n'
+			pass
+		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))	
 
 #----------------------------------------#
 
@@ -217,8 +267,7 @@ class Kinitos(Entity):
 					return True
 
 	def hit_confirmed(self,kino): # kino(agent) here may be a bullet or a quasar
-		if(self.stronghold==False):
-			print("Hello")
+		if(self._stronghold==False):
 			self._health -= kino.get_damage()
 
 #----------------------------------------#
@@ -348,7 +397,7 @@ class Coin(Token):
 class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
-		self.__gravity = 0.00003
+		self.__gravity = const.GRAVITY
 		self._acc_y += -1 * self.__gravity
 		self._health = 5
 
@@ -376,7 +425,6 @@ class Player(Kinitos):
 
 	def decrement_health(self,value):
 		if(self.stronghold==False):
-			print("POPO")
 			self._health -= value
 
 	def get_bullet_list(self):
@@ -415,19 +463,18 @@ class Player(Kinitos):
 		self._move_right_val=0
 
 	def move_up(self):
-		self._vel_y -= 0.00008
+		self._vel_y -= const.MOVE_UP_ACC
 
 	def move_left(self):
 		if(self._pos_x < const.PLAYER_BOUND_L):
 			self._pos_x = const.PLAYER_BOUND_L + 1
 			return 0
-		self._move_left_val = -0.05
+		self._move_left_val = -1*const.MOVE_X_VEL
 
 	def move_right(self):
-		if(self._pos_x > const.PLAYER_BOUND_R):
-			self._pos_x = const.PLAYER_BOUND_R - 1
+		if(self._pos_x >= const.PLAYER_BOUND_R):
 			return 0
-		self._move_right_val = 0.05
+		self._move_right_val = const.MOVE_X_VEL
 
 	def stop(self):
 		self._vel_x = 0

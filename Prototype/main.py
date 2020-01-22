@@ -15,15 +15,15 @@ method.setup()
 
 game = classes.Game()	# New game created
 ares = classes.Player(30,10)
-hades = classes.Demogorgon(145,20)
+hades = classes.Demogorgon(const.GAME_BOUNDARY_R,20)
 
-game.generate_tokens(160,1500)
+game.generate_tokens(const.SCRN_WIDTH+10,1500)
 
 while(keyboard.is_pressed('b')==0):
 	pass
 	
-frame_L_pos = 0
-frame_R_pos = const.GAME_BOUNDARY_R - 2
+# frame_L_pos = 0
+# frame_R_pos = const.GAME_BOUNDARY_R - 2
 
 # GAME ON
 #========================================================================
@@ -31,14 +31,14 @@ frame_R_pos = const.GAME_BOUNDARY_R - 2
 
 while(keyboard.is_pressed('z')==0):
 
-	method.move_background(frame_L_pos,game.get_speed())
+	method.move_background(game.get_frame_L_pos(),game.get_speed())
 
 	if(game.get_mode()=="NORMAL"):
 
 		ares.disp_vects()
 
 		for tok in game.get_token_list():
-			tok.check_token_activation(frame_L_pos,frame_R_pos,game.get_speed())
+			tok.check_token_activation(game.get_frame_L_pos(),game.get_frame_R_pos(),game.get_speed())
 
 		for tok in game.get_token_list():	# Token rendering
 			if(tok.get_status()==True):
@@ -136,25 +136,25 @@ while(keyboard.is_pressed('z')==0):
 		ares.stop()
 	if(keyboard.is_pressed(" ")):
 		ares.shields_up()
-
+	if(keyboard.is_pressed("m")):
+		game.pause()
 	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and ares.is_ammo()):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
 		ares.add_bullet_list()
 
 	if(ares.get_health()<=0):
-		print("GAME OVER!!!")
+		game.over()
 		time.sleep(3)
 		break;
 
 	if(hades.get_health()<=0):
-		print("YOU WIN!!!")
+		game.win()
 		time.sleep(3)
 		break;
 
-	frame_L_pos+=(game.get_speed())
-	frame_R_pos+=(game.get_speed())	
+	game.update_frames()	
 
-	if(frame_R_pos > 1660 and hades.get_status()==False):
+	if(game.get_frame_R_pos() > 1660 and hades.get_status()==False):
 		hades.set_status(True)
 		game.set_mode("DEMOGORGON")
 		ares.set_ammo(500)
