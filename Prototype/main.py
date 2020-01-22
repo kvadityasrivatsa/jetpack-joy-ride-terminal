@@ -191,10 +191,6 @@ class Kinitos(Entity):
 		elif(self.pos_y<GAME_BOUNDARY_U):
 			self.vel_y=0
 			self.pos_y=GAME_BOUNDARY_U
-		elif(self.pos_x>PLAYER_BOUND_R):
-			self.pos_x=PLAYER_BOUND_R
-		elif(self.pos_x<PLAYER_BOUND_L):
-			self.pos_x=PLAYER_BOUND_L
 
 		plot_obj(self,"plot")
 		self.move_left_val=0 	# both get reset at the end of each iteration
@@ -328,6 +324,25 @@ class Player(Kinitos):
 
 		self.mag_inf_status = False
 
+	def update_pos(self):
+		plot_obj(self,"clear")
+		self.pos_x = self.pos_x + self.vel_x*VX_CONST + self.move_left_val + self.move_right_val
+		self.pos_y = self.pos_y + self.vel_y*VY_CONST
+		if(self.pos_y>GAME_BOUNDARY_D):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_D
+		elif(self.pos_y<GAME_BOUNDARY_U):
+			self.vel_y=0
+			self.pos_y=GAME_BOUNDARY_U
+		elif(self.pos_x>PLAYER_BOUND_R):
+			self.pos_x=PLAYER_BOUND_R
+		elif(self.pos_x<PLAYER_BOUND_L):
+			self.pos_x=PLAYER_BOUND_L
+
+		plot_obj(self,"plot")
+		self.move_left_val=0 	# both get reset at the end of each iteration
+		self.move_right_val=0
+
 	def display_treasure(self):
 		plot_text(100,1,"                  ")
 		plot_text(100,1,"Treasure: "+str(self.treasure))
@@ -393,7 +408,6 @@ class Demogorgon(Kinitos):
 		self.bound_R = 1
 
 		self.health = 3000
-		self.gun_temp = 0
 		self.status = False
 		self.vel_y = 0.08 # this is abs acc_y, dir is given in update_vel acc to player_x
 		self.quasar_list = []
@@ -484,7 +498,6 @@ game = Game(5)	# New game created
 ares = Player(30,10)
 hades = Demogorgon(145,20)
 
-token_list = []
 game.token_list.append(Fire_Beam(160,20,0,10))
 game.token_list.append(Fire_Beam(180,30,0,10))
 game.token_list.append(Fire_Beam(200,30,90,10))
