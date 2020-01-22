@@ -1,6 +1,5 @@
 import colorama
 from colorama import Fore, Back, Style
-import numpy
 import keyboard
 import time
 import math
@@ -104,12 +103,12 @@ def plot(y,x,string,fore_col,back_col,style):
 
 	print("\033[" + str(int(x)) + ";" + str(int(y)) + "H" + fore_col_str + back_col_str + style_str + string)
 
-def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col,back_col)
+def plot_obj(obj, __mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col,back_col)
 	
-	if(mode=="plot"):
+	if(__mode=="plot"):
 		for i in obj.get_body_array():
 			plot(obj.get_pos_x()+i[0],obj.get_pos_y()+i[1],i[2],i[3],i[4],i[5])
-	elif(mode=="clear"):
+	elif(__mode=="clear"):
 		for i in obj.get_body_array():
 			plot(obj.get_pos_x()+i[0],obj.get_pos_y()+i[1]," ","","BLACK","NORMAL")
 
@@ -117,7 +116,7 @@ def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col
 
 def dist(x1,y1,x2,y2):
 	return abs(math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))
-
+	# return abs((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)**0.5)
 #----------------------------------------#
 
 def terminate():
@@ -130,32 +129,32 @@ def terminate():
 class Game():
 
 	def __init__(self,spd):
-		self.speed = spd
-		self.token_list = []
-		self.mode = "NORMAL"
+		self.__speed = spd
+		self.__token_list = []
+		self.__mode = "NORMAL"
 
 	###############################
 
 	def get_speed(self):
-		return self.speed
+		return self.__speed
 
 	def get_mode(self):
-		return self.mode
+		return self.__mode
 
 	def set_speed(self,new_speed):
-		self.speed = new_speed
+		self.__speed = new_speed
 
 	def set_mode(self,new_mode):
-		self.mode = new_mode
+		self.__mode = new_mode
 
 	def get_token_list(self):
-		return self.token_list
+		return self.__token_list
 
 	def add_token_list(self,token):
-		self.token_list.append(token)
+		self.__token_list.append(token)
 
 	def remove_token_list(self,token):
-		self.token_list.remove(token)
+		self.__token_list.remove(token)
 
 	###############################
 
@@ -165,157 +164,157 @@ class Game():
 class Entity():
 
 	def __init__(self,x,y):
-		self.pos_x = x
-		self.pos_y = y
+		self._pos_x = x
+		self._pos_y = y
 
-		self.vel_x = 0
-		self.vel_y = 0
+		self._vel_x = 0
+		self._vel_y = 0
 
-		self.acc_x = 0
-		self.acc_y = 0
+		self._acc_x = 0
+		self._acc_y = 0
 
-		self.body_array = []
-		self.bound_U = 0
-		self.bound_D = 0
-		self.bound_L = 0
-		self.bound_R = 0
+		self._body_array = []
+		self._bound_U = 0
+		self._bound_D = 0
+		self._bound_L = 0
+		self._bound_R = 0
 
 	###############################
 
 	def get_pos_x(self):
-		return self.pos_x
+		return self._pos_x
 
 	def get_pos_y(self):
-		return self.pos_y
+		return self._pos_y
 
 	def get_body_array(self):
-		return self.body_array
+		return self._body_array
 
 	def get_bound_U(self):
-		return self.bound_U
+		return self._bound_U
 
 	def get_bound_D(self):
-		return self.bound_D
+		return self._bound_D
 
 	def get_bound_L(self):
-		return self.bound_L
+		return self._bound_L
 
 	def get_bound_R(self):
-		return self.bound_R
+		return self._bound_R
 
 	###############################
 
 	def render_test(self):
-		plot(self.pos_x, self.pos_y, " ", "", "BLUE","NORMAL")
+		plot(self._pos_x, self._pos_y, " ", "", "BLUE","NORMAL")
 
 	def define_pos(self,x,y):
-		plot(self.pos_x, self.pos_y, " ", "", "BLACK","NORMAL")
-		self.pos_x = x
-		self.pos_y = y
+		plot(self._pos_x, self._pos_y, " ", "", "BLACK","NORMAL")
+		self._pos_x = x
+		self._pos_y = y
 
 	def disp_vects(self):
-		plot(0,0,"vel="+str(self.vel_y)+" acc_y="+str(self.acc_y), "WHITE", "BLACK", "NORMAL")
+		plot(0,0,"vel="+str(self._vel_y)+" _acc_y="+str(self._acc_y), "WHITE", "BLACK", "NORMAL")
 
 #----------------------------------------#
 
 class Kinitos(Entity):
 	def __init__(self,x,y):
 		Entity.__init__(self,x,y)
-		self.damage = 0
-		self.move_left_val = 0
-		self.move_right_val = 0
+		self._damage = 0
+		self._move_left_val = 0
+		self._move_right_val = 0
 
 	###############################
 
 	def get_damage(self):
-		return self.damage
+		return self._damage
 
 	###############################
 
 	def update_pos(self):
 		plot_obj(self,"clear")
-		self.pos_x = self.pos_x + self.vel_x*VX_CONST + self.move_left_val + self.move_right_val
-		self.pos_y = self.pos_y + self.vel_y*VY_CONST
-		if(self.pos_y>GAME_BOUNDARY_D):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_D
-		elif(self.pos_y<GAME_BOUNDARY_U):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_U
+		self._pos_x = self._pos_x + self._vel_x*VX_CONST + self._move_left_val + self._move_right_val
+		self._pos_y = self._pos_y + self._vel_y*VY_CONST
+		if(self._pos_y>GAME_BOUNDARY_D):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_D
+		elif(self._pos_y<GAME_BOUNDARY_U):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_U
 
 		plot_obj(self,"plot")
-		self.move_left_val=0 	# both get reset at the end of each iteration
-		self.move_right_val=0
+		self._move_left_val=0 	# both get reset at the end of each iteration
+		self._move_right_val=0
 
 	def update_vel(self):
-		self.vel_y -= self.acc_y*A_CONST
+		self._vel_y -= self._acc_y*A_CONST
 
 	def move_up(self):
-		self.vel_y -= 0.00006
+		self._vel_y -= 0.00006
 
 	def move_left(self):
-		self.move_left_val = -0.024
+		self._move_left_val = -0.024
 
 	def move_right(self):
-		self.move_right_val = 0.024
+		self._move_right_val = 0.024
 
 	def if_hit_token(self,tok):
-		for i in self.body_array:
-			if(tok.if_collision(i[0]+self.pos_x,i[1]+self.pos_y)):
+		for i in self._body_array:
+			if(tok.if_collision(i[0]+self._pos_x,i[1]+self._pos_y)):
 				return True
 
 	def if_hit_kinitos(self,kino):	# if bullet hits a kinito
-		for i in self.body_array:
+		for i in self._body_array:
 			for j in kino.get_body_array():
-				if(int(kino.pos_x + j[0]) == int(self.pos_x + i[0]) and int(kino.get_pos_y() + j[1]) == int(self.pos_y + i[1])):
+				if(int(kino._pos_x + j[0]) == int(self._pos_x + i[0]) and int(kino.get_pos_y() + j[1]) == int(self._pos_y + i[1])):
 					return True
 
 	def hit_confirmed(self,kino): # kino(agent) here may be a bullet or a quasar
-		self.health -= kino.get_damage()
+		self.__health -= kino.get_damage()
 
 #----------------------------------------#
 
 class Token(Entity):	# Fire beams, Magnets & COINS$$
-	def __init__(self,frame_loc,y):
+	def __init__(self,_frame_loc,y):
 		Entity.__init__(self,0,y)	# self.x is not applicable till token is rendered
-		self.frame_loc = frame_loc
-		self.status = False
-		self.token_type = ""
+		self._frame_loc = _frame_loc
+		self._status = False
+		self._token_type = ""
 
 	###############################
 
 	def get_frame_loc(self):
-		return self.frame_loc
+		return self._frame_loc
 
 	def get_status(self):
-		return self.status
+		return self._status
 
 	def get_token_type(self):
-		return self.token_type
+		return self._token_type
 
 	###############################
 
 	def activate_token(self):
-		self.vel_x -= GAME_SPD
-		self.pos_x = GAME_BOUNDARY_R
-		self.status = True
+		self._vel_x -= GAME_SPD
+		self._pos_x = GAME_BOUNDARY_R
+		self._status = True
 		# print("Token Activated")
 
 	def deactivate_token(self):
-		self.vel_x = 0
-		self.pos_x = 400
-		self.status = False
+		self._vel_x = 0
+		self._pos_x = 400
+		self._status = False
 		plot_obj(self,"clear")
 		# print("Token Deactivated")
 
 	def if_collision(self,x,y):
-		for i in self.body_array:
-			if(int(x)==int(i[0]+self.pos_x) and int(y)==int(i[1]+self.pos_y)):
+		for i in self._body_array:
+			if(int(x)==int(i[0]+self._pos_x) and int(y)==int(i[1]+self._pos_y)):
 				return True
 
 	def render(self):
 		plot_obj(self,"clear")
-		self.pos_x = self.pos_x + self.vel_x*VX_CONST
+		self._pos_x = self._pos_x + self._vel_x*VX_CONST
 		plot_obj(self,"plot")
 
 	def redact(self):
@@ -324,59 +323,59 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 #----------------------------------------#
 
 class Fire_Beam(Token):
-	def __init__(self,frame_loc,y,angle,length):
-		Token.__init__(self,frame_loc,y)
-		self.token_type = "fire_beam"
-		self.damage = 1
+	def __init__(self,_frame_loc,y,angle,length):
+		Token.__init__(self,_frame_loc,y)
+		self._token_type = "fire_beam"
+		self._damage = 1
 
 		if(angle==0):
 			for i in range(length):
-				self.body_array.append([i,0,"<","BLACK","RED","NORMAL"])
-			self.bound_L = 0
-			self.bound_R = length
+				self._body_array.append([i,0,"<","BLACK","RED","NORMAL"])
+			self._bound_L = 0
+			self._bound_R = length
 
 		elif(angle==90):
 			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
 				for i in range(length):
-					self.body_array.append([0,i,"<","BLACK","RED","NORMAL"])
+					self._body_array.append([0,i,"<","BLACK","RED","NORMAL"])
 			else:
 				for i in range(length):
-					self.body_array.append([0,-1*i,"<","BLACK","RED","NORMAL"])
-			self.bound_L = 0
-			self.bound_R = 0
+					self._body_array.append([0,-1*i,"<","BLACK","RED","NORMAL"])
+			self._bound_L = 0
+			self._bound_R = 0
 
 		elif(angle==45):
 			if(y<(GAME_BOUNDARY_D+GAME_BOUNDARY_U)/2):	# upper half
 				for i in range(length):
-					self.body_array.append([i,i,"<","BLACK","RED","NORMAL"])
+					self._body_array.append([i,i,"<","BLACK","RED","NORMAL"])
 			else:
 				for i in range(length):					# lower half
-					self.body_array.append([i,-1*i,"<","BLACK","RED","NORMAL"])
+					self._body_array.append([i,-1*i,"<","BLACK","RED","NORMAL"])
 
-			self.bound_L = 0
-			self.bound_R = length
+			self._bound_L = 0
+			self._bound_R = length
 
 
 	###############################
 
 	def get_damage(self):
-		return self.damage
+		return self._damage
 
 	###############################
 
 #----------------------------------------#
 
 class Coin(Token):
-	def __init__(self,frame_loc,y):
-		Token.__init__(self,frame_loc,y)
-		self.token_type = "coin"
-		self.reward = 10
-		self.body_array = [[0,0,"©","YELLOW","","BRIGHT"]]
+	def __init__(self,_frame_loc,y):
+		Token.__init__(self,_frame_loc,y)
+		self._token_type = "coin"
+		self.__reward = 10
+		self._body_array = [[0,0,"©","YELLOW","","BRIGHT"]]
 
 	###############################
 
 	def get_reward(self):
-		return self.reward
+		return self.__reward
 
 	###############################
 
@@ -385,89 +384,89 @@ class Coin(Token):
 class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
-		self.gravity = 0.00002
-		self.acc_y += -1 * self.gravity
+		self.__gravity = 0.00002
+		self._acc_y += -1 * self.__gravity
 
-		self.body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
-		self.bound_L = 0
-		self.bound_R = 1
+		self._body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
+		self._bound_L = 0
+		self._bound_R = 1
 
-		self.treasure = 0
-		self.health = 3000
-		self.gun_temp = 0
-		self.ammo = 20
-		self.bullet_count = 0
-		self.bullet_list = []
+		self.__treasure = 0
+		self.__health = 3000
+		self.__gun_temp = 0
+		self.__ammo = 20
+		self.__bullet_count = 0
+		self.__bullet_list = []
 
 		self.mag_inf_status = False
 
 	###############################
 
 	def incerement_treasure(self,value):
-		self.treasure += value
+		self.__treasure += value
 
 	def decrement_health(self,value):
-		self.health -= value
+		self.__health -= value
 
 	def get_bullet_list(self):
-		return self.bullet_list
+		return self.__bullet_list
 
 	def add_bullet_list(self):	# keeps track of the unique serial no. of every quasar
-		self.bullet_count += 1
-		bullet = Bullet(self.get_bound_R()+self.get_pos_x()+1,self.get_pos_y(),BULLET_VEL,self.bullet_count)
-		self.ammo -= 1
-		self.bullet_list.append(bullet)
+		self.__bullet_count += 1
+		bullet = Bullet(self.get_bound_R()+self.get_pos_x()+1,self.get_pos_y(),BULLET_VEL,self.__bullet_count)
+		self.__ammo -= 1
+		self.__bullet_list.append(bullet)
 
 	def remove_bullet_list(self,bullet):
-		self.bullet_list.remove(bullet)
+		self.__bullet_list.remove(bullet)
 
 	###############################
 
 	def update_pos(self):
 		plot_obj(self,"clear")
-		self.pos_x = self.pos_x + self.vel_x*VX_CONST + self.move_left_val + self.move_right_val
-		self.pos_y = self.pos_y + self.vel_y*VY_CONST
-		if(self.pos_y>GAME_BOUNDARY_D):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_D
-		elif(self.pos_y<GAME_BOUNDARY_U):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_U
-		elif(self.pos_x>PLAYER_BOUND_R):
-			self.pos_x=PLAYER_BOUND_R
-		elif(self.pos_x<PLAYER_BOUND_L):
-			self.pos_x=PLAYER_BOUND_L
+		self._pos_x = self._pos_x + self._vel_x*VX_CONST + self._move_left_val + self._move_right_val
+		self._pos_y = self._pos_y + self._vel_y*VY_CONST
+		if(self._pos_y>GAME_BOUNDARY_D):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_D
+		elif(self._pos_y<GAME_BOUNDARY_U):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_U
+		elif(self._pos_x>PLAYER_BOUND_R):
+			self._pos_x=PLAYER_BOUND_R
+		elif(self._pos_x<PLAYER_BOUND_L):
+			self._pos_x=PLAYER_BOUND_L
 
 		plot_obj(self,"plot")
-		self.move_left_val=0 	# both get reset at the end of each iteration
-		self.move_right_val=0
+		self._move_left_val=0 	# both get reset at the end of each iteration
+		self._move_right_val=0
 
 	def display_treasure(self):
 		plot_text(100,1,"                  ")
-		plot_text(100,1,"Treasure: "+str(self.treasure))
+		plot_text(100,1,"Treasure: "+str(self.__treasure))
 
 	def display_health(self):
 		plot_text(20,1,"                  ")
-		plot_text(20,1,"Health: "+str(self.health))
+		plot_text(20,1,"Health: "+str(self.__health))
 
 	def fetch_gun_temp(self):
-		return self.gun_temp
+		return self.__gun_temp
 
 	def shots_fired(self):
-		self.gun_temp = GUN_TEMP
+		self.__gun_temp = GUN_TEMP
 
 	def gun_cooldown(self):
-		self.gun_temp -= GAME_SPD
+		self.__gun_temp -= GAME_SPD
 
 	def is_ammo(self):
-		if(self.ammo>0):
+		if(self.__ammo>0):
 			return True
 		else:
 			return False
 
 	def display_ammo(self):
 		plot_text(50,1,"                  ")
-		plot_text(50,1,"Ammo: "+str(self.ammo))
+		plot_text(50,1,"Ammo: "+str(self.__ammo))
 
 	def bullet_out(self,bullet):
 		if(bullet.get_pos_x()>GAME_BOUNDARY_R):
@@ -476,19 +475,19 @@ class Player(Kinitos):
 			return False
 
 	def magnet_influence(self,magnet):
-		distance = dist(self.pos_x,self.pos_y,magnet.get_pos_x(),magnet.get_pos_y())
+		distance = dist(self._pos_x,self._pos_y,magnet.get_pos_x(),magnet.get_pos_y())
 		# print("distance:",distance)
 		if(distance<=10):
-			mag_vel_x = (magnet.get_pos_x() - self.pos_x)/distance
-			mag_vel_y = (magnet.get_pos_y() - self.pos_y)/distance
+			mag_vel_x = (magnet.get_pos_x() - self._pos_x)/distance
+			mag_vel_y = (magnet.get_pos_y() - self._pos_y)/distance
 			# print("Active")
 			
-			self.vel_x += mag_vel_x*magnet.get_MAG_VEL()
-			self.vel_y += mag_vel_y*magnet.get_MAG_VEL()
-			# plot_text(0,10,"mag_vel_x:"+str(mag_vel_x)+"mag_vel_y:"+str(mag_vel_y)+"self.vel_x"+str(self.vel_x)+"self.vel_y"+str(self.vel_y))
+			self._vel_x += mag_vel_x*magnet.get_MAG_VEL()
+			self._vel_y += mag_vel_y*magnet.get_MAG_VEL()
+			# plot_text(0,10,"mag_vel_x:"+str(mag_vel_x)+"mag_vel_y:"+str(mag_vel_y)+"self._vel_x"+str(self._vel_x)+"self._vel_y"+str(self._vel_y))
 		else:
 			# print("Inactive")
-			self.vel_x = 0
+			self._vel_x = 0
 
 #----------------------------------------#
 
@@ -496,63 +495,63 @@ class Demogorgon(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
 
-		self.body_array = [[0,0," ","","RED","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","RED","NORMAL"]]
-		self.bound_L = 0
-		self.bound_R = 1
+		self._body_array = [[0,0," ","","RED","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","RED","NORMAL"]]
+		self._bound_L = 0
+		self._bound_R = 1
 
-		self.health = 3000
-		self.status = False
-		self.vel_y = 0.08 # this is abs acc_y, dir is given in update_vel acc to player_x
-		self.quasar_list = []
-		self.quasar_count = 0
-		self.blaster_temp = 0
+		self.__health = 3000
+		self._status = False
+		self._vel_y = 0.08 # this is abs _acc_y, dir is given in update_vel acc to player_x
+		self.__quasar_list = []
+		self.__quasar_count = 0
+		self.__blaster_temp = 0
 
 	###############################
 
 	def get_status(self):
-		return self.status
+		return self._status
 
 	def set_status(self,new_status):
-		self.status = new_status
+		self._status = new_status
 
 	def get_quasar_list(self):
-		return self.quasar_list
+		return self.__quasar_list
 
 	def add_quasar_list(self,quasar):
-		self.quasar_list.append(quasar)
+		self.__quasar_list.append(quasar)
 
 	def remove_quasar_list(self,quasar):
-		self.quasar_list.remove(quasar)
+		self.__quasar_list.remove(quasar)
 
 	###############################
 
 	def display_health(self):
 		plot_text(70,1,"                  ")
-		plot_text(70,1,"DD Health: "+str(self.health))
+		plot_text(70,1,"DD Health: "+str(self.__health))
 
 	def update_pos(self,player_x,player_y):
 		plot_obj(self,"clear")
 
-		if(player_y < self.pos_y):
-			self.pos_y -= self.vel_y*(abs(player_y-self.pos_y)+0)*0.04
+		if(player_y < self._pos_y):
+			self._pos_y -= self._vel_y*(abs(player_y-self._pos_y)+0)*0.04
 		else:
-			self.pos_y += self.vel_y*(abs(player_y-self.pos_y)+0)*0.04
+			self._pos_y += self._vel_y*(abs(player_y-self._pos_y)+0)*0.04
 
 		plot_obj(self,"plot")
-		if(self.pos_y>GAME_BOUNDARY_D):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_D
-		elif(self.pos_y<GAME_BOUNDARY_U):
-			self.vel_y=0
-			self.pos_y=GAME_BOUNDARY_U
+		if(self._pos_y>GAME_BOUNDARY_D):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_D
+		elif(self._pos_y<GAME_BOUNDARY_U):
+			self._vel_y=0
+			self._pos_y=GAME_BOUNDARY_U
 
 	def fire_quasar(self):
-		self.add_quasar_list(Quasar(140,self.pos_y,-1*BULLET_VEL,self.quasar_count))
-		self.quasar_count += 1 # keeps track of the unique serial no. of every quasar
-		self.blaster_temp = 5
+		self.add_quasar_list(Quasar(140,self._pos_y,-1*BULLET_VEL,self.__quasar_count))
+		self.__quasar_count += 1 # keeps track of the unique serial no. of every quasar
+		self.__blaster_temp = 5
 
 	def rain_fire(self,player_x,player_y):
-		if(abs(self.pos_y - player_y)<3 and self.blaster_temp < 1):
+		if(abs(self._pos_y - player_y)<3 and self.__blaster_temp < 1):
 			# print("shots fired")
 			self.fire_quasar()
 
@@ -563,45 +562,45 @@ class Demogorgon(Kinitos):
 			return False
 
 	def blaster_cooldown(self):
-		self.blaster_temp -= 0.01
+		self.__blaster_temp -= 0.01
 
 #----------------------------------------#
 
 class Bullet(Kinitos):
 	def __init__(self,x,y,vel,serial_no):
 		Kinitos.__init__(self,x,y)
-		self.serial_no = serial_no
-		self.body_array = [[0,0,"=","WHITE","","BRIGHT"]]
-		self.damage = 500
-		self.vel_x = vel # game vel already factored in 
+		self.__serial_no = serial_no
+		self._body_array = [[0,0,"=","WHITE","","BRIGHT"]]
+		self._damage = 500
+		self._vel_x = vel # game vel already factored in 
 
 #----------------------------------------#
 
 class Quasar(Kinitos):
-	def __init__(self,x,y,vel,serial_no):
+	def __init__(self,x,y,vel,__serial_no):
 		Kinitos.__init__(self,x,y)
-		self.serial_no = serial_no
-		self.body_array = [[0,0,"@","CYAN","","BRIGHT"]]
-		self.damage = 500
-		self.vel_x = vel # game vel already factored in 
+		self.__serial_no = __serial_no
+		self._body_array = [[0,0,"@","CYAN","","BRIGHT"]]
+		self._damage = 500
+		self._vel_x = vel # game vel already factored in 
 
 #----------------------------------------#
 
 class Magnet(Token):
-	def __init__(self,frame_loc,y):
-		Token.__init__(self,frame_loc,y)
-		self.token_type = "magnet"
+	def __init__(self,_frame_loc,y):
+		Token.__init__(self,_frame_loc,y)
+		self._token_type = "magnet"
 
-		self.body_array = [[0,0,"M","","RED","NORMAL"],[0,1,"M","","WHITE","NORMAL"],[1,0,"M","","WHITE","NORMAL"],[1,1,"M","","RED","NORMAL"]]
-		self.bound_L = 0
-		self.bound_R = 1
+		self._body_array = [[0,0,"M","","RED","NORMAL"],[0,1,"M","","WHITE","NORMAL"],[1,0,"M","","WHITE","NORMAL"],[1,1,"M","","RED","NORMAL"]]
+		self._bound_L = 0
+		self._bound_R = 1
 
-		self.MAG_VEL = 0.001
+		self.__MAG_VEL = 0.001
 
 	###############################
 
 	def get_MAG_VEL(self):
-		return self.MAG_VEL
+		return self.__MAG_VEL
 
 	###############################
 
