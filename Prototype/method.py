@@ -34,6 +34,9 @@ def plot(y,x,string,fore_col,back_col,style):
 	if(y < const.GAME_BOUNDARY_L or y > const.GAME_BOUNDARY_R):
 		return 0
 
+	# if(x < const.GAME_BOUNDARY_U or x > const.GAME_BOUNDARY_D):
+	# 	return 0
+
 	if(fore_col == "BLACK"):
 		fore_col_str = Fore.BLACK
 	elif(fore_col == "RED"):

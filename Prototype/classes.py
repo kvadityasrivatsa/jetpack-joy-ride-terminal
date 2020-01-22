@@ -12,10 +12,11 @@ import method
 
 class Game():
 
-	def __init__(self,spd):
-		self.__speed = spd
+	def __init__(self):
+		self.__speed = const.GAME_SPD
 		self.__token_list = []
 		self.__mode = "NORMAL"
+		self.__boost_temp = 0
 
 	###############################
 
@@ -39,6 +40,16 @@ class Game():
 
 	def remove_token_list(self,token):
 		self.__token_list.remove(token)
+
+	def speed_boost(self):
+		self.__boost_temp = 100
+		self.__speed += const.GAME_SPD*1.3
+		print("BOOOOOOOOSSSSSSSTTTTTTT")
+
+	def boost_cooldown(self):
+		if(self.__boost_temp<1):
+			self.__speed = const.GAME_SPD
+		self.__boost_temp -= const.GAME_SPD
 
 	###############################
 
@@ -73,6 +84,9 @@ class Entity():
 
 	def get_body_array(self):
 		return self._body_array
+
+	def set_body_array(self,new_body_array):
+		self._body_array = new_body_array
 
 	def get_bound_U(self):
 		return self._bound_U
@@ -177,20 +191,35 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 	def get_token_type(self):
 		return self._token_type
 
+	def set_speed(self,vel):
+		self._vel_x = -1*vel
+
 	###############################
 
-	def activate_token(self):
-		self._vel_x -= const.GAME_SPD
-		self._pos_x = const.GAME_BOUNDARY_R
-		self._status = True
-		# print("Token Activated")
+	# def activate_token(self):
+	# 	self._vel_x -= const.GAME_SPD
+	# 	self._pos_x = const.GAME_BOUNDARY_R
+	# 	self._status = True
+	# 	# print("Token Activated")
 
-	def deactivate_token(self):
-		self._vel_x = 0
-		self._pos_x = 400
-		self._status = False
-		method.plot_obj(self,"clear")
-		# print("Token Deactivated")
+	# def deactivate_token(self):
+	# 	self._vel_x = 0
+	# 	self._pos_x = 400
+	# 	self._status = False
+	# 	method.plot_obj(self,"clear")
+	# 	# print("Token Deactivated")
+
+	def check_token_activation(self,frame_L_pos,frame_R_pos,cur_spd):
+		if(self._status==False and self._frame_loc<=frame_R_pos and self._frame_loc>frame_L_pos):
+			self._status = True
+			self._vel_x -= cur_spd
+			self._pos_x = const.GAME_BOUNDARY_R
+
+		elif(self._status==True and self._bound_R+self._pos_x<= const.GAME_BOUNDARY_L):
+			self._vel_x = 0
+			self._pos_x = 400
+			self._status = False
+			method.plot_obj(self,"clear")			
 
 	def if_collision(self,x,y):
 		for i in self._body_array:
@@ -282,7 +311,7 @@ class Player(Kinitos):
 		self.__bullet_count = 0
 		self.__bullet_list = []
 
-		self.mag_inf_status = False
+		self.__shield_temp = 0
 
 	###############################
 
@@ -360,18 +389,25 @@ class Player(Kinitos):
 
 	def magnet_influence(self,magnet):
 		distance = method.dist(self._pos_x,self._pos_y,magnet.get_pos_x(),magnet.get_pos_y())
-		# print("distance:",distance)
 		if(distance<=10):
 			mag_vel_x = (magnet.get_pos_x() - self._pos_x)/distance
 			mag_vel_y = (magnet.get_pos_y() - self._pos_y)/distance
-			# print("Active")
 			
 			self._vel_x += mag_vel_x*magnet.get_MAG_VEL()
 			self._vel_y += mag_vel_y*magnet.get_MAG_VEL()
-			# method.plot_text(0,10,"mag_vel_x:"+str(mag_vel_x)+"mag_vel_y:"+str(mag_vel_y)+"self._vel_x"+str(self._vel_x)+"self._vel_y"+str(self._vel_y))
 		else:
-			# print("Inactive")
 			self._vel_x = 0
+
+	def shields_up(self):
+		if(self.__shield_temp<0):
+			self.__shield_temp = const.SHIELD_TEMP
+			self.set_body_array([[0,0," ","","GREEN","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","GREEN","NORMAL"]])
+
+	def shield_cooldown(self):
+		self.__shield_temp -= const.GAME_SPD
+		if(self.__shield_temp<0):
+			self.set_body_array([[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]])
+
 
 #----------------------------------------#
 
@@ -430,7 +466,7 @@ class Demogorgon(Kinitos):
 			self._pos_y=const.GAME_BOUNDARY_U
 
 	def fire_quasar(self):
-		self.add_quasar_list(Quasar(140,self._pos_y,-1*const.BULLET_VEL,self.__quasar_count))
+		self.add_quasar_list(Quasar(140,self._pos_y,-1*const.QUASAR_VEL,self.__quasar_count))
 		self.__quasar_count += 1 # keeps track of the unique serial no. of every quasar
 		self.__blaster_temp = 5
 
@@ -487,4 +523,21 @@ class Magnet(Token):
 		return self.__MAG_VEL
 
 	###############################
+
+#----------------------------------------#
+
+class Speed_Boost(Token):
+	def __init__(self,_frame_loc,y):
+		Token.__init__(self,_frame_loc,y)
+		self._token_type = "speed_boost"
+		self._body_array = [[0,0,"S","","CYAN","NORMAL"],[0,1,"S","","WHITE","NORMAL"],[1,0,"S","","WHITE","NORMAL"],[1,1,"S","","CYAN","NORMAL"]]
+	###############################
+
+	def get_boost(self):
+		return self.boost
+
+	###############################	
+
+#----------------------------------------#
+
 

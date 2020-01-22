@@ -13,7 +13,7 @@ import classes
 
 method.setup()
 
-game = classes.Game(5)	# New game created
+game = classes.Game()	# New game created
 ares = classes.Player(30,10)
 hades = classes.Demogorgon(145,20)
 
@@ -31,6 +31,7 @@ game.add_token_list(classes.Coin(186,25))
 game.add_token_list(classes.Coin(188,25))
 game.add_token_list(classes.Coin(190,25))
 game.add_token_list(classes.Magnet(175,20))
+game.add_token_list(classes.Speed_Boost(200,10))
 
 while(keyboard.is_pressed('b')==0):
 	pass
@@ -48,15 +49,22 @@ while(keyboard.is_pressed('z')==0):
 
 		ares.disp_vects()
 
-		for tok in game.get_token_list():	# Token activation
-			if(tok.get_frame_loc()+tok.get_bound_L()<=frame_R_pos and tok.get_frame_loc()>frame_L_pos and tok.get_status()==False):
-				tok.activate_token()
-			if(tok.get_frame_loc()+tok.get_bound_R()<=frame_L_pos and tok.get_status()==True):
-				tok.deactivate_token()
+		# for tok in game.get_token_list():	# Token activation
+		# 	if(tok.get_frame_loc()+tok.get_bound_L()<=frame_R_pos and tok.get_frame_loc()>frame_L_pos and tok.get_status()==False):
+		# 		tok.activate_token()
+		# 	if(tok.get_frame_loc()+tok.get_bound_R()<=frame_L_pos and tok.get_status()==True):
+		# 		tok.deactivate_token()
+
+		for tok in game.get_token_list():
+			tok.check_token_activation(frame_L_pos,frame_R_pos,game.get_speed())
 
 		for tok in game.get_token_list():	# Token rendering
 			if(tok.get_status()==True):
 				tok.render()
+
+		for tok in game.get_token_list():	# Update Token speed
+			if(tok.get_status()==True):
+				tok.set_speed(game.get_speed())
 
 		for tok in game.get_token_list():		# Token interaction
 			if(tok.get_status()==True):	
@@ -69,6 +77,11 @@ while(keyboard.is_pressed('z')==0):
 						ares.decrement_health(tok.get_damage())
 				elif(tok.get_token_type()=="magnet"):
 					ares.magnet_influence(tok)
+				elif(tok.get_token_type()=="speed_boost"):
+					if(ares.if_hit_token(tok)==True):
+						tok.redact()
+						game.speed_boost()
+						game.remove_token_list(tok)
 
 
 		for bullet in ares.get_bullet_list():	# if bullets shot by ares hit a fire beam
@@ -121,6 +134,9 @@ while(keyboard.is_pressed('z')==0):
 	ares.display_treasure()
 	ares.display_health()
 	ares.display_ammo()
+	ares.shield_cooldown()
+
+	game.boost_cooldown()
 
 	if(keyboard.is_pressed("w")):
 		ares.move_up()
@@ -128,22 +144,21 @@ while(keyboard.is_pressed('z')==0):
 		ares.move_left()
 	if(keyboard.is_pressed("d")):
 		ares.move_right()
+	if(keyboard.is_pressed(" ")):
+		ares.shields_up()
 
 	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and ares.is_ammo()):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
 		ares.add_bullet_list()
 
-
-	print(int(frame_L_pos),int(frame_R_pos))
-
-	frame_L_pos+=(const.FRAME_SPD)	# 1/game spd
-	frame_R_pos+=(const.FRAME_SPD)	# 1/game spd
+	frame_L_pos+=(game.get_speed())
+	frame_R_pos+=(game.get_speed())	
 
 	if(frame_R_pos > 450 and hades.get_status()==False):
 		hades.set_status(True)
 		game.set_mode("DEMOGORGON")
 
-	time.sleep(0.00002/const.GAME_SPD) 	# game 1/fps
+	time.sleep(0.00002/game.get_speed()) 	# game 1/fps
 
 #========================================================================
 #========================================================================
