@@ -6,6 +6,7 @@ import math
 import const
 import method
 import random
+import art
 
 #-------------------------------------------------------------------------------------#
 #								    | CLASSES |								          #
@@ -20,6 +21,7 @@ class Game():
 		self.__boost_temp = 0
 		self.__frame_L_pos = 0
 		self.__frame_R_pos = const.GAME_BOUNDARY_R - 2
+		self.__time_left = const.DRAGON_TIME # in seconds
 
 	###############################
 
@@ -53,6 +55,15 @@ class Game():
 	def update_frames(self):
 		self.__frame_L_pos += self.__speed
 		self.__frame_R_pos += self.__speed
+
+	def update_time_left(self):
+		self.__time_left -= (0.0002)/self.__speed
+
+	def is_time_up(self):
+		if(self.__time_left<=0):
+			return True
+		else:
+			return False
 
 	###############################
 
@@ -112,43 +123,74 @@ class Game():
 			# 	tok_pos_x += random.randrange(0,10)
 
 	def pause(self):
-		method.plot(50,10,"                                                                                           ","WHITE","YELLOW","NORMAL")
-		method.plot(50,11,"  ██████╗  █████╗ ███╗   ███╗███████╗    ██████╗  █████╗ ██╗   ██╗███████╗███████╗██████╗  ","WHITE","YELLOW","NORMAL")
-		method.plot(50,12," ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔══██╗██╔══██╗██║   ██║██╔════╝██╔════╝██╔══██╗ ","WHITE","YELLOW","NORMAL")
-		method.plot(50,13," ██║  ███╗███████║██╔████╔██║█████╗      ██████╔╝███████║██║   ██║███████╗█████╗  ██║  ██║ ","WHITE","YELLOW","NORMAL")
-		method.plot(50,14," ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██╔═══╝ ██╔══██║██║   ██║╚════██║██╔══╝  ██║  ██║ ","WHITE","YELLOW","NORMAL")
-		method.plot(50,15," ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ██║     ██║  ██║╚██████╔╝███████║███████╗██████╔╝ ","WHITE","YELLOW","NORMAL")
-		method.plot(50,16,"  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚═════╝  ","WHITE","YELLOW","NORMAL")
-		method.plot(50,17,"                                                                                           ","WHITE","YELLOW","NORMAL")
+		cursor = 10
+		for line in art.game_paused:
+			method.plot((const.SCRN_WIDTH-len(line))/2,cursor,line,"WHITE","YELLOW","NORMAL")
+			cursor+=1
 		while(keyboard.is_pressed("n")==False):	# resume on 'n'
 			pass
 		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))
 
 	def over(self):
-		method.plot(55,10,"                                                                            ","WHITE","RED","BRIGHT")
-		method.plot(55,11,"  ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗  ","WHITE","RED","BRIGHT")
-		method.plot(55,12," ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗ ","WHITE","RED","BRIGHT")
-		method.plot(55,13," ██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝ ","WHITE","RED","BRIGHT")
-		method.plot(55,14," ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗ ","WHITE","RED","BRIGHT")
-		method.plot(55,15," ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║ ","WHITE","RED","BRIGHT")
-		method.plot(55,16,"  ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝ ","WHITE","RED","BRIGHT")
-		method.plot(55,17,"                                                                            ","WHITE","RED","BRIGHT")
-		while(keyboard.is_pressed("n")==False):	# resume on 'n'
-			pass
-		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))	
+		cursor = 10
+		for line in art.game_over:
+			method.plot((const.SCRN_WIDTH-len(line))/2,cursor,line,"WHITE","RED","BRIGHT")
+			cursor+=1
 
 	def win(self):
-		method.plot(65,10,"                                                        ","WHITE","GREEN","BRIGHT")
-		method.plot(65,11," ██╗   ██╗ ██████╗ ██╗   ██╗    ██╗    ██╗██╗███╗   ██╗ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,12," ╚██╗ ██╔╝██╔═══██╗██║   ██║    ██║    ██║██║████╗  ██║ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,13,"  ╚████╔╝ ██║   ██║██║   ██║    ██║ █╗ ██║██║██╔██╗ ██║ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,14,"   ╚██╔╝  ██║   ██║██║   ██║    ██║███╗██║██║██║╚██╗██║ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,15,"    ██║   ╚██████╔╝╚██████╔╝    ╚███╔███╔╝██║██║ ╚████║ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,16,"    ╚═╝    ╚═════╝  ╚═════╝      ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝ ","WHITE","GREEN","BRIGHT")
-		method.plot(65,17,"                                                        ","WHITE","GREEN","BRIGHT")
-		while(keyboard.is_pressed("n")==False):	# resume on 'n'
-			pass
-		self.add_token_list(Fire_Beam(self.__frame_L_pos+6,10,90,8))	
+		cursor = 10
+		for line in art.you_win:
+			method.plot((const.SCRN_WIDTH-len(line))/2,cursor,line,"WHITE","GREEN","BRIGHT")
+			cursor+=1	
+
+	def render_dashboard(self,player,demogorgon):
+		player_lives = player.get_health()
+		player_score = player.get_treasure()
+		demogorgon_health = demogorgon.get_health()
+		demo_time = demogorgon.get_status()
+		ammo_string = ""
+		for i in range(player.get_ammo()):
+			ammo_string += "➤"
+
+
+		method.plot(40,const.GAME_BOUNDARY_D+2,"          ","BLACK","WHITE","BRIGHT")
+		method.plot(40,const.GAME_BOUNDARY_D+3,"   ARES   ","BLACK","WHITE","BRIGHT")
+		method.plot(40,const.GAME_BOUNDARY_D+4,"          ","BLACK","WHITE","BRIGHT")
+
+		method.plot(5,const.GAME_BOUNDARY_D+5,"LIVES:            ","BLACK","WHITE","BRIGHT")
+		for i in range(player_lives):
+			method.plot(12+2*i,const.GAME_BOUNDARY_D+5,"❤","RED","WHITE","BRIGHT")
+
+		method.plot(5,const.GAME_BOUNDARY_D+7,"SCORE: "+str(player_score)+"  ","BLACK","WHITE","BRIGHT")					
+
+		if(demo_time==False):
+
+			method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO: "+ammo_string+"  ","BLACK","WHITE","BRIGHT")
+
+			percentage_compl = int(self.__frame_L_pos*100/const.PATH_LENGTH)
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+2,"        ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+3,"        ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+3,"   "+str(percentage_compl)+"%"+"  ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+4,"        ","BLACK","WHITE","BRIGHT")
+		else:
+
+			health_bars = int(demogorgon_health*40/3000 + 1)
+
+			method.plot(const.SCRN_WIDTH-40,const.GAME_BOUNDARY_D+2,"           ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH-40,const.GAME_BOUNDARY_D+3,"   HADES   ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH-40,const.GAME_BOUNDARY_D+4,"           ","BLACK","WHITE","BRIGHT")
+
+			method.plot(const.SCRN_WIDTH-55,const.GAME_BOUNDARY_D+7,"                                          :HEALTH ","BLACK","WHITE","BRIGHT")
+			for i in range(health_bars):
+				method.plot(const.SCRN_WIDTH-14-i,const.GAME_BOUNDARY_D+7,"#","BLACK","WHITE","BRIGHT")
+
+			seconds = str(int(self.__time_left)%60)
+			minutes = "0"+str(int(self.__time_left/60))
+			time = minutes+":"+seconds
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+2,"         ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+3,"  "+time+"  ","BLACK","WHITE","BRIGHT")
+			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+4,"         ","BLACK","WHITE","BRIGHT")
+			# method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO: "+player_score+"  ","BLACK","WHITE","BRIGHT")
 
 #----------------------------------------#
 
@@ -239,14 +281,9 @@ class Kinitos(Entity):
 
 	def update_pos(self):
 		method.plot_obj(self,"clear")
+
 		self._pos_x = self._pos_x + self._vel_x*const.VX_CONST #+ self._move_left_val + self._move_right_val
 		self._pos_y = self._pos_y + self._vel_y*const.VY_CONST
-		if(self._pos_y>const.GAME_BOUNDARY_D):
-			self._vel_y=0
-			self._pos_y=const.GAME_BOUNDARY_D
-		elif(self._pos_y<const.GAME_BOUNDARY_U):
-			self._vel_y=0
-			self._pos_y=const.GAME_BOUNDARY_U
 
 		method.plot_obj(self,"plot")
 		self._move_left_val=0 	# both get reset at the end of each iteration
@@ -294,19 +331,6 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		self._vel_x = -1*vel
 
 	###############################
-
-	# def activate_token(self):
-	# 	self._vel_x -= const.GAME_SPD
-	# 	self._pos_x = const.GAME_BOUNDARY_R
-	# 	self._status = True
-	# 	# print("Token Activated")
-
-	# def deactivate_token(self):
-	# 	self._vel_x = 0
-	# 	self._pos_x = 400
-	# 	self._status = False
-	# 	method.plot_obj(self,"clear")
-	# 	# print("Token Deactivated")
 
 	def check_token_activation(self,frame_L_pos,frame_R_pos,cur_spd):
 		if(self._status==False and self._frame_loc<=frame_R_pos and self._frame_loc>frame_L_pos):
@@ -401,7 +425,7 @@ class Player(Kinitos):
 		self._acc_y += -1 * self.__gravity
 		self._health = 5
 
-		self._body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
+		self._body_array = []
 		self._bound_L = 0
 		self._bound_R = 1
 		self._bound_U = 0
@@ -414,6 +438,7 @@ class Player(Kinitos):
 		self.__bullet_list = []
 
 		self.__shield_temp = 0
+		self.__array_package = art.player
 
 	###############################
 
@@ -438,6 +463,15 @@ class Player(Kinitos):
 
 	def remove_bullet_list(self,bullet):
 		self.__bullet_list.remove(bullet)
+
+	def set_array_package(self,pack):
+		self.__array_package = pack
+
+	def get_treasure(self):
+		return self.__treasure
+
+	def get_ammo(self):
+		return self.__ammo
 
 	###############################
 
@@ -479,14 +513,6 @@ class Player(Kinitos):
 	def stop(self):
 		self._vel_x = 0
 
-	def display_treasure(self):
-		method.plot_text(100,1,"                  ")
-		method.plot_text(100,1,"Treasure: "+str(self.__treasure))
-
-	def display_health(self):
-		method.plot_text(20,1,"                  ")
-		method.plot_text(20,1,"Health: "+str(self._health))
-
 	def fetch_gun_temp(self):
 		return self.__gun_temp
 
@@ -501,10 +527,6 @@ class Player(Kinitos):
 			return True
 		else:
 			return False
-
-	def display_ammo(self):
-		method.plot_text(50,1,"                  ")
-		method.plot_text(50,1,"Ammo: "+str(self.__ammo))
 
 	def bullet_out(self,bullet):
 		if(bullet.get_pos_x()>const.GAME_BOUNDARY_R):
@@ -527,17 +549,23 @@ class Player(Kinitos):
 		# else:
 		# 	self._vel_x = 0
 
+	def walk(self,parity):
+		if(parity%8<4):
+			self.set_body_array(self.__array_package[0])
+		else:
+			self.set_body_array(self.__array_package[1])
+
 	def shields_up(self):
 		if(self.__shield_temp<0):
 			self.__shield_temp = const.SHIELD_TEMP
 			self.stronghold = True
-			self.set_body_array([[0,0," ","","GREEN","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","GREEN","NORMAL"]])
+			self.set_array_package(art.player_shield)
 
 	def shield_cooldown(self):
 		self.__shield_temp -= const.GAME_SPD
 		if(self.__shield_temp<500):
 			self.stronghold = False
-			self.set_body_array([[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]])
+			self.set_array_package(art.player)
 
 
 #----------------------------------------#
@@ -576,10 +604,6 @@ class Demogorgon(Kinitos):
 
 	###############################
 
-	def display_health(self):
-		method.plot_text(70,1,"                  ")
-		method.plot_text(70,1,"DD Health: "+str(self._health))
-
 	def update_pos(self,player_x,player_y):
 		method.plot_obj(self,"clear")
 
@@ -597,7 +621,7 @@ class Demogorgon(Kinitos):
 			self._pos_y=const.GAME_BOUNDARY_U
 
 	def fire_quasar(self):
-		self.add_quasar_list(Quasar(140,self._pos_y,-1*const.QUASAR_VEL,self.__quasar_count))
+		self.add_quasar_list(Quasar(self._pos_x+self._bound_L-1,self._pos_y,-1*const.QUASAR_VEL,self.__quasar_count))
 		self.__quasar_count += 1 # keeps track of the unique serial no. of every quasar
 		self.__blaster_temp = 5
 

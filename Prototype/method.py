@@ -19,9 +19,13 @@ def setup():
 
 	i=0
 	while(i<=const.SCRN_WIDTH-4):
-		plot(i,const.GAME_BOUNDARY_D+1,"[]","BLUE","","NORMAL")
-		plot(i,const.WALL_WIDTH,"[]","BLUE","","NORMAL")
+		plot(i,const.GAME_BOUNDARY_D+1,"[]","BLUE","","BRIGHT")
+		plot(i,const.WALL_WIDTH,"[]","BLUE","","BRIGHT")
 		i+=2
+
+	# for i in range(const.SCRN_WIDTH):
+	# 	for j in range(10):
+	# 		plot(i,j+const.GAME_BOUNDARY_D+2," ","WHITE","WHITE","BRIGHT")
 #----------------------------------------#
 
 def plot_text(y,x,string):
@@ -105,14 +109,14 @@ def move_background(parity,spd):
 	if(int(parity)%(spd*50)==0):
 		i=0
 		while(i<=const.SCRN_WIDTH-4):
-			plot(i,const.GAME_BOUNDARY_D+1,"[]","BLUE","BLACK","NORMAL")
-			plot(i,const.WALL_WIDTH,"[]","BLUE","BLACK","NORMAL")
+			plot(i,const.GAME_BOUNDARY_D+1,"[]","BLUE","BLACK","BRIGHT")
+			plot(i,const.WALL_WIDTH,"[]","BLUE","BLACK","BRIGHT")
 			i+=2
 	else:
 		i=0
 		while(i<=const.SCRN_WIDTH-4):
-			plot(i,const.GAME_BOUNDARY_D+1,"][","BLUE","BLACK","NORMAL")
-			plot(i,const.WALL_WIDTH,"][","BLUE","BLACK","NORMAL")
+			plot(i,const.GAME_BOUNDARY_D+1,"][","BLUE","BLACK","BRIGHT")
+			plot(i,const.WALL_WIDTH,"][","BLUE","BLACK","BRIGHT")
 			i+=2
 
 #----------------------------------------#

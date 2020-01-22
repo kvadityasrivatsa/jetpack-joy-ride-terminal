@@ -15,7 +15,7 @@ method.setup()
 
 game = classes.Game()	# New game created
 ares = classes.Player(30,10)
-hades = classes.Demogorgon(const.GAME_BOUNDARY_R,20)
+hades = classes.Demogorgon(const.GAME_BOUNDARY_R-3,20)
 
 game.generate_tokens(const.SCRN_WIDTH+10,1500)
 
@@ -31,9 +31,9 @@ while(keyboard.is_pressed('b')==0):
 
 while(keyboard.is_pressed('z')==0):
 
-	method.move_background(game.get_frame_L_pos(),game.get_speed())
-
 	if(game.get_mode()=="NORMAL"):
+
+		method.move_background(game.get_frame_L_pos(),game.get_speed())
 
 		ares.disp_vects()
 
@@ -105,7 +105,8 @@ while(keyboard.is_pressed('z')==0):
 		hades.update_pos(ares.get_pos_x(),ares.get_pos_y())
 		hades.rain_fire(ares.get_pos_x(),ares.get_pos_y())
 		hades.blaster_cooldown()
-		hades.display_health()
+
+		game.update_time_left()
 
 #*******************************************************************************
 
@@ -115,13 +116,11 @@ while(keyboard.is_pressed('z')==0):
 		else:
 			i.update_pos()
 
+	ares.walk(game.get_frame_L_pos())
 	ares.update_pos()
 	ares.update_vel()
 	ares.gun_cooldown()
 	ares.disp_vects()
-	ares.display_treasure()
-	ares.display_health()
-	ares.display_ammo()
 	ares.shield_cooldown()
 
 	game.boost_cooldown()
@@ -142,7 +141,7 @@ while(keyboard.is_pressed('z')==0):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
 		ares.add_bullet_list()
 
-	if(ares.get_health()<=0):
+	if(ares.get_health()<=0 or game.is_time_up()):
 		game.over()
 		time.sleep(3)
 		break;
@@ -152,14 +151,16 @@ while(keyboard.is_pressed('z')==0):
 		time.sleep(3)
 		break;
 
+	game.render_dashboard(ares,hades)
+
 	game.update_frames()	
 
-	if(game.get_frame_R_pos() > 1660 and hades.get_status()==False):
+	if(game.get_frame_R_pos() > const.PATH_LENGTH+const.SCRN_WIDTH and hades.get_status()==False):
 		hades.set_status(True)
 		game.set_mode("DEMOGORGON")
 		ares.set_ammo(500)
 
-	time.sleep(0.00002/game.get_speed()) 	# game 1/fps
+	time.sleep(0.00002/game.get_speed()) 	# DELAY
 
 #========================================================================
 #========================================================================
