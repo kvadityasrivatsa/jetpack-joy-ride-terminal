@@ -5,6 +5,7 @@ import time
 import math
 import const
 import method
+import random
 
 #-------------------------------------------------------------------------------------#
 #								    | CLASSES |								          #
@@ -41,17 +42,62 @@ class Game():
 	def remove_token_list(self,token):
 		self.__token_list.remove(token)
 
+	###############################
+
 	def speed_boost(self):
 		self.__boost_temp = 100
 		self.__speed += const.GAME_SPD*1.3
-		print("BOOOOOOOOSSSSSSSTTTTTTT")
 
 	def boost_cooldown(self):
 		if(self.__boost_temp<1):
 			self.__speed = const.GAME_SPD
 		self.__boost_temp -= const.GAME_SPD
 
-	###############################
+
+	def generate_tokens(self,beg,end):
+		tok_pos_x = beg
+		tok_pos_y = 20
+		while(tok_pos_x<end):
+
+			x = random.randrange(0,1000)
+
+			if(0<=x and x<=300):		# coin
+				tok_pos_x += random.randrange(0,10)
+				tok_pos_y = random.randrange(const.GAME_BOUNDARY_U,const.GAME_BOUNDARY_D)
+				length = random.randrange(3,6)
+				for i in range(length):
+					self.add_token_list(Coin(tok_pos_x+2*i,tok_pos_y))
+				tok_pos_x += length*2 + 1
+
+			elif(300<x and x<=800):		# fire beam
+				tok_pos_x += random.randrange(0,4)
+				tick = random.randrange(0,3)
+				length = random.randrange(2,10)
+				if(tick==0): # 0
+					tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+1,const.GAME_BOUNDARY_D-1)
+					self.add_token_list(Fire_Beam(tok_pos_x,tok_pos_y,0,length))
+					tok_pos_x += length
+				elif(tick==1): # 90
+					tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+1,const.GAME_BOUNDARY_D-1)
+					self.add_token_list(Fire_Beam(tok_pos_x,tok_pos_y,90,length))
+					tok_pos_x += length
+				elif(tick==2): # 45
+					tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+1,const.GAME_BOUNDARY_D-1)
+					self.add_token_list(Fire_Beam(tok_pos_x,tok_pos_y,45,length))
+					tok_pos_x += length
+
+			elif(800<x and x<=950):	 	# magnet
+				tok_pos_x += random.randrange(0,10)
+				tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+2,const.GAME_BOUNDARY_D-2)
+				self.add_token_list(Magnet(tok_pos_x,tok_pos_y))
+				tok_pos_x += 3
+			elif(950<x and x<=1000):	# speed boost
+				tok_pos_x += random.randrange(0,10)
+				tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+2,const.GAME_BOUNDARY_D-2)
+				self.add_token_list(Speed_Boost(tok_pos_x,tok_pos_y))
+				tok_pos_x += 3
+			# else:						# nothing
+			# 	tok_pos_x += random.randrange(0,10)
 
 
 #----------------------------------------#
@@ -78,6 +124,9 @@ class Entity():
 
 	def get_pos_x(self):
 		return self._pos_x
+
+	def get_vel_x(self):
+		return self._vel_x
 
 	def get_pos_y(self):
 		return self._pos_y
@@ -121,7 +170,7 @@ class Kinitos(Entity):
 		self._damage = 0
 		self._move_left_val = 0
 		self._move_right_val = 0
-		self._health = 3000
+		self._health = 0
 
 	###############################
 
@@ -132,7 +181,7 @@ class Kinitos(Entity):
 
 	def update_pos(self):
 		method.plot_obj(self,"clear")
-		self._pos_x = self._pos_x + self._vel_x*const.VX_CONST + self._move_left_val + self._move_right_val
+		self._pos_x = self._pos_x + self._vel_x*const.VX_CONST #+ self._move_left_val + self._move_right_val
 		self._pos_y = self._pos_y + self._vel_y*const.VY_CONST
 		if(self._pos_y>const.GAME_BOUNDARY_D):
 			self._vel_y=0
@@ -147,15 +196,6 @@ class Kinitos(Entity):
 
 	def update_vel(self):
 		self._vel_y -= self._acc_y*const.A_CONST
-
-	def move_up(self):
-		self._vel_y -= 0.00006
-
-	def move_left(self):
-		self._move_left_val = -0.024
-
-	def move_right(self):
-		self._move_right_val = 0.024
 
 	def if_hit_token(self,tok):
 		for i in self._body_array:
@@ -300,6 +340,7 @@ class Player(Kinitos):
 		Kinitos.__init__(self,x,y)
 		self.__gravity = 0.00002
 		self._acc_y += -1 * self.__gravity
+		self._health = 5
 
 		self._body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
 		self._bound_L = 0
@@ -314,6 +355,9 @@ class Player(Kinitos):
 		self.__shield_temp = 0
 
 	###############################
+
+	def set_ammo(self,val):
+		self.__ammo = val
 
 	def incerement_treasure(self,value):
 		self.__treasure += value
@@ -347,12 +391,23 @@ class Player(Kinitos):
 			self._pos_y=const.GAME_BOUNDARY_U
 		elif(self._pos_x>const.PLAYER_BOUND_R):
 			self._pos_x=const.PLAYER_BOUND_R
-		elif(self._pos_x<const.PLAYER_BOUND_L):
-			self._pos_x=const.PLAYER_BOUND_L
+			self._vel_x=0
+		elif(self._pos_x<const.PLAYER_BOUND_L+1):
+			self._pos_x=const.PLAYER_BOUND_L+2
+			self._vel_x=0
 
 		method.plot_obj(self,"plot")
 		self._move_left_val=0 	# both get reset at the end of each iteration
 		self._move_right_val=0
+
+	def move_up(self):
+		self._vel_y -= 0.00006
+
+	def move_left(self):
+		self._move_left_val = -0.027
+
+	def move_right(self):
+		self._move_right_val = 0.027
 
 	def display_treasure(self):
 		method.plot_text(100,1,"                  ")
@@ -393,10 +448,11 @@ class Player(Kinitos):
 			mag_vel_x = (magnet.get_pos_x() - self._pos_x)/distance
 			mag_vel_y = (magnet.get_pos_y() - self._pos_y)/distance
 			
-			self._vel_x += mag_vel_x*magnet.get_MAG_VEL()
-			self._vel_y += mag_vel_y*magnet.get_MAG_VEL()
-		else:
-			self._vel_x = 0
+			self._vel_x += mag_vel_x*magnet.get_MAG_VEL()*3
+			self._vel_y += mag_vel_y*magnet.get_MAG_VEL()*0.5
+			
+		# else:
+		# 	self._vel_x = 0
 
 	def shields_up(self):
 		if(self.__shield_temp<0):
@@ -501,7 +557,7 @@ class Quasar(Kinitos):
 		Kinitos.__init__(self,x,y)
 		self.__serial_no = __serial_no
 		self._body_array = [[0,0,"@","CYAN","","BRIGHT"]]
-		self._damage = 500
+		self._damage = 1
 		self._vel_x = vel # game vel already factored in 
 
 #----------------------------------------#

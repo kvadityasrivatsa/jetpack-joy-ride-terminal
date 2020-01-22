@@ -17,21 +17,7 @@ game = classes.Game()	# New game created
 ares = classes.Player(30,10)
 hades = classes.Demogorgon(145,20)
 
-game.add_token_list(classes.Fire_Beam(160,20,0,10))
-game.add_token_list(classes.Fire_Beam(180,30,0,10))
-game.add_token_list(classes.Fire_Beam(200,30,90,10))
-game.add_token_list(classes.Fire_Beam(220,10,45,10))
-game.add_token_list(classes.Fire_Beam(240,21,45,10))
-game.add_token_list(classes.Fire_Beam(260,30,45,10))
-game.add_token_list(classes.Fire_Beam(280,10,90,20))
-game.add_token_list(classes.Coin(180,25))
-game.add_token_list(classes.Coin(182,25))
-game.add_token_list(classes.Coin(184,25))
-game.add_token_list(classes.Coin(186,25))
-game.add_token_list(classes.Coin(188,25))
-game.add_token_list(classes.Coin(190,25))
-game.add_token_list(classes.Magnet(175,20))
-game.add_token_list(classes.Speed_Boost(200,10))
+game.generate_tokens(160,1500)
 
 while(keyboard.is_pressed('b')==0):
 	pass
@@ -49,12 +35,6 @@ while(keyboard.is_pressed('z')==0):
 
 		ares.disp_vects()
 
-		# for tok in game.get_token_list():	# Token activation
-		# 	if(tok.get_frame_loc()+tok.get_bound_L()<=frame_R_pos and tok.get_frame_loc()>frame_L_pos and tok.get_status()==False):
-		# 		tok.activate_token()
-		# 	if(tok.get_frame_loc()+tok.get_bound_R()<=frame_L_pos and tok.get_status()==True):
-		# 		tok.deactivate_token()
-
 		for tok in game.get_token_list():
 			tok.check_token_activation(frame_L_pos,frame_R_pos,game.get_speed())
 
@@ -68,15 +48,21 @@ while(keyboard.is_pressed('z')==0):
 
 		for tok in game.get_token_list():		# Token interaction
 			if(tok.get_status()==True):	
+
 				if(tok.get_token_type()=="coin"):
 					if(ares.if_hit_token(tok)==True):
 						ares.incerement_treasure(tok.get_reward())
 						game.remove_token_list(tok)
+
 				elif(tok.get_token_type()=="fire_beam"):
 					if(ares.if_hit_token(tok)==True):
 						ares.decrement_health(tok.get_damage())
+						game.remove_token_list(tok)
+						tok.redact()
+
 				elif(tok.get_token_type()=="magnet"):
 					ares.magnet_influence(tok)
+
 				elif(tok.get_token_type()=="speed_boost"):
 					if(ares.if_hit_token(tok)==True):
 						tok.redact()
@@ -154,9 +140,10 @@ while(keyboard.is_pressed('z')==0):
 	frame_L_pos+=(game.get_speed())
 	frame_R_pos+=(game.get_speed())	
 
-	if(frame_R_pos > 450 and hades.get_status()==False):
+	if(frame_R_pos > 1660 and hades.get_status()==False):
 		hades.set_status(True)
 		game.set_mode("DEMOGORGON")
+		ares.set_ammo(500)
 
 	time.sleep(0.00002/game.get_speed()) 	# game 1/fps
 
