@@ -100,6 +100,21 @@ def plot_obj(obj, __mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_c
 def dist(x1,y1,x2,y2):
 	return abs(math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))
 	# return abs((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)**0.5)
+
+def move_background(parity,spd):
+	if(int(parity)%(spd*50)==0):
+		i=0
+		while(i<=const.SCRN_WIDTH-4):
+			plot(i,const.GAME_BOUNDARY_D+1,"[]","BLUE","BLACK","NORMAL")
+			plot(i,const.WALL_WIDTH,"[]","BLUE","BLACK","NORMAL")
+			i+=2
+	else:
+		i=0
+		while(i<=const.SCRN_WIDTH-4):
+			plot(i,const.GAME_BOUNDARY_D+1,"][","BLUE","BLACK","NORMAL")
+			plot(i,const.WALL_WIDTH,"][","BLUE","BLACK","NORMAL")
+			i+=2
+
 #----------------------------------------#
 
 def terminate():

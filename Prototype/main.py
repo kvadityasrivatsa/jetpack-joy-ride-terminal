@@ -31,6 +31,8 @@ frame_R_pos = const.GAME_BOUNDARY_R - 2
 
 while(keyboard.is_pressed('z')==0):
 
+	method.move_background(frame_L_pos,game.get_speed())
+
 	if(game.get_mode()=="NORMAL"):
 
 		ares.disp_vects()
@@ -130,12 +132,24 @@ while(keyboard.is_pressed('z')==0):
 		ares.move_left()
 	if(keyboard.is_pressed("d")):
 		ares.move_right()
+	if(keyboard.is_pressed("s")):
+		ares.stop()
 	if(keyboard.is_pressed(" ")):
 		ares.shields_up()
 
 	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and ares.is_ammo()):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
 		ares.add_bullet_list()
+
+	if(ares.get_health()<=0):
+		print("GAME OVER!!!")
+		time.sleep(3)
+		break;
+
+	if(hades.get_health()<=0):
+		print("YOU WIN!!!")
+		time.sleep(3)
+		break;
 
 	frame_L_pos+=(game.get_speed())
 	frame_R_pos+=(game.get_speed())	

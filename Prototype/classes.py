@@ -61,7 +61,7 @@ class Game():
 
 			x = random.randrange(0,1000)
 
-			if(0<=x and x<=300):		# coin
+			if(0<=x and x<=400):		# coin
 				tok_pos_x += random.randrange(0,10)
 				tok_pos_y = random.randrange(const.GAME_BOUNDARY_U,const.GAME_BOUNDARY_D)
 				length = random.randrange(3,6)
@@ -69,7 +69,7 @@ class Game():
 					self.add_token_list(Coin(tok_pos_x+2*i,tok_pos_y))
 				tok_pos_x += length*2 + 1
 
-			elif(300<x and x<=800):		# fire beam
+			elif(400<x and x<=900):		# fire beam
 				tok_pos_x += random.randrange(0,4)
 				tick = random.randrange(0,3)
 				length = random.randrange(2,10)
@@ -86,7 +86,7 @@ class Game():
 					self.add_token_list(Fire_Beam(tok_pos_x,tok_pos_y,45,length))
 					tok_pos_x += length
 
-			elif(800<x and x<=950):	 	# magnet
+			elif(900<x and x<=950):	 	# magnet
 				tok_pos_x += random.randrange(0,10)
 				tok_pos_y = random.randrange(const.GAME_BOUNDARY_U+2,const.GAME_BOUNDARY_D-2)
 				self.add_token_list(Magnet(tok_pos_x,tok_pos_y))
@@ -171,11 +171,19 @@ class Kinitos(Entity):
 		self._move_left_val = 0
 		self._move_right_val = 0
 		self._health = 0
+		self._stronghold = False
 
 	###############################
 
 	def get_damage(self):
 		return self._damage
+
+	def get_health(self):
+		return self._health
+
+	def is_immune(self):
+		return self._stronghold
+
 
 	###############################
 
@@ -209,7 +217,9 @@ class Kinitos(Entity):
 					return True
 
 	def hit_confirmed(self,kino): # kino(agent) here may be a bullet or a quasar
-		self._health -= kino.get_damage()
+		if(self.stronghold==False):
+			print("Hello")
+			self._health -= kino.get_damage()
 
 #----------------------------------------#
 
@@ -338,13 +348,15 @@ class Coin(Token):
 class Player(Kinitos):
 	def __init__(self,x,y):
 		Kinitos.__init__(self,x,y)
-		self.__gravity = 0.00002
+		self.__gravity = 0.00003
 		self._acc_y += -1 * self.__gravity
 		self._health = 5
 
 		self._body_array = [[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]]
 		self._bound_L = 0
 		self._bound_R = 1
+		self._bound_U = 0
+		self._bound_D = 1
 
 		self.__treasure = 0
 		self.__gun_temp = 0
@@ -363,7 +375,9 @@ class Player(Kinitos):
 		self.__treasure += value
 
 	def decrement_health(self,value):
-		self._health -= value
+		if(self.stronghold==False):
+			print("POPO")
+			self._health -= value
 
 	def get_bullet_list(self):
 		return self.__bullet_list
@@ -383,16 +397,16 @@ class Player(Kinitos):
 		method.plot_obj(self,"clear")
 		self._pos_x = self._pos_x + self._vel_x*const.VX_CONST + self._move_left_val + self._move_right_val
 		self._pos_y = self._pos_y + self._vel_y*const.VY_CONST
-		if(self._pos_y>const.GAME_BOUNDARY_D):
+		if(self._pos_y+self._bound_D>const.GAME_BOUNDARY_D):
 			self._vel_y=0
-			self._pos_y=const.GAME_BOUNDARY_D
-		elif(self._pos_y<const.GAME_BOUNDARY_U):
+			self._pos_y=const.GAME_BOUNDARY_D-self._bound_D-1
+		elif(self._pos_y+self._bound_U<const.GAME_BOUNDARY_U):
 			self._vel_y=0
 			self._pos_y=const.GAME_BOUNDARY_U
-		elif(self._pos_x>const.PLAYER_BOUND_R):
+		elif(self._pos_x+self._bound_R>const.PLAYER_BOUND_R):
 			self._pos_x=const.PLAYER_BOUND_R
 			self._vel_x=0
-		elif(self._pos_x<const.PLAYER_BOUND_L+1):
+		elif(self._pos_x+self._bound_L<const.PLAYER_BOUND_L+1):
 			self._pos_x=const.PLAYER_BOUND_L+2
 			self._vel_x=0
 
@@ -401,13 +415,22 @@ class Player(Kinitos):
 		self._move_right_val=0
 
 	def move_up(self):
-		self._vel_y -= 0.00006
+		self._vel_y -= 0.00008
 
 	def move_left(self):
-		self._move_left_val = -0.027
+		if(self._pos_x < const.PLAYER_BOUND_L):
+			self._pos_x = const.PLAYER_BOUND_L + 1
+			return 0
+		self._move_left_val = -0.05
 
 	def move_right(self):
-		self._move_right_val = 0.027
+		if(self._pos_x > const.PLAYER_BOUND_R):
+			self._pos_x = const.PLAYER_BOUND_R - 1
+			return 0
+		self._move_right_val = 0.05
+
+	def stop(self):
+		self._vel_x = 0
 
 	def display_treasure(self):
 		method.plot_text(100,1,"                  ")
@@ -443,6 +466,9 @@ class Player(Kinitos):
 			return False
 
 	def magnet_influence(self,magnet):
+		if(self._pos_x<=const.GAME_BOUNDARY_L):
+			self._vel_x = 0
+			return 0
 		distance = method.dist(self._pos_x,self._pos_y,magnet.get_pos_x(),magnet.get_pos_y())
 		if(distance<=10):
 			mag_vel_x = (magnet.get_pos_x() - self._pos_x)/distance
@@ -450,18 +476,20 @@ class Player(Kinitos):
 			
 			self._vel_x += mag_vel_x*magnet.get_MAG_VEL()*3
 			self._vel_y += mag_vel_y*magnet.get_MAG_VEL()*0.5
-			
+
 		# else:
 		# 	self._vel_x = 0
 
 	def shields_up(self):
 		if(self.__shield_temp<0):
 			self.__shield_temp = const.SHIELD_TEMP
+			self.stronghold = True
 			self.set_body_array([[0,0," ","","GREEN","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","GREEN","NORMAL"]])
 
 	def shield_cooldown(self):
 		self.__shield_temp -= const.GAME_SPD
-		if(self.__shield_temp<0):
+		if(self.__shield_temp<500):
+			self.stronghold = False
 			self.set_body_array([[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]])
 
 
