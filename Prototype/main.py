@@ -107,11 +107,11 @@ def plot(y,x,string,fore_col,back_col,style):
 def plot_obj(obj, mode):	#obj MUST have a body array (rel_x,rel_y,ascii,fore_col,back_col)
 	
 	if(mode=="plot"):
-		for i in obj.body_array:
-			plot(obj.pos_x+i[0],obj.pos_y+i[1],i[2],i[3],i[4],i[5])
+		for i in obj.get_body_array():
+			plot(obj.get_pos_x()+i[0],obj.get_pos_y()+i[1],i[2],i[3],i[4],i[5])
 	elif(mode=="clear"):
-		for i in obj.body_array:
-			plot(obj.pos_x+i[0],obj.pos_y+i[1]," ","","BLACK","NORMAL")
+		for i in obj.get_body_array():
+			plot(obj.get_pos_x()+i[0],obj.get_pos_y()+i[1]," ","","BLACK","NORMAL")
 
 #----------------------------------------#
 
@@ -134,11 +134,30 @@ class Game():
 		self.token_list = []
 		self.mode = "NORMAL"
 
-	def change_game_speed(self,new_spd):
-		self.speed = new_spd
+	###############################
 
-	def ret_game_speed(self):
+	def get_speed(self):
 		return self.speed
+
+	def get_mode(self):
+		return self.mode
+
+	def set_speed(self,new_speed):
+		self.speed = new_speed
+
+	def set_mode(self,new_mode):
+		self.mode = new_mode
+
+	def get_token_list(self):
+		return self.token_list
+
+	def add_token_list(self,token):
+		self.token_list.append(token)
+
+	def remove_token_list(self,token):
+		self.token_list.remove(token)
+
+	###############################
 
 
 #----------------------------------------#
@@ -161,6 +180,31 @@ class Entity():
 		self.bound_L = 0
 		self.bound_R = 0
 
+	###############################
+
+	def get_pos_x(self):
+		return self.pos_x
+
+	def get_pos_y(self):
+		return self.pos_y
+
+	def get_body_array(self):
+		return self.body_array
+
+	def get_bound_U(self):
+		return self.bound_U
+
+	def get_bound_D(self):
+		return self.bound_D
+
+	def get_bound_L(self):
+		return self.bound_L
+
+	def get_bound_R(self):
+		return self.bound_R
+
+	###############################
+
 	def render_test(self):
 		plot(self.pos_x, self.pos_y, " ", "", "BLUE","NORMAL")
 
@@ -180,6 +224,13 @@ class Kinitos(Entity):
 		self.damage = 0
 		self.move_left_val = 0
 		self.move_right_val = 0
+
+	###############################
+
+	def get_damage(self):
+		return self.damage
+
+	###############################
 
 	def update_pos(self):
 		plot_obj(self,"clear")
@@ -215,12 +266,12 @@ class Kinitos(Entity):
 
 	def if_hit_kinitos(self,kino):	# if bullet hits a kinito
 		for i in self.body_array:
-			for j in kino.body_array:
-				if(int(kino.pos_x + j[0]) == int(self.pos_x + i[0]) and int(kino.pos_y + j[1]) == int(self.pos_y + i[1])):
+			for j in kino.get_body_array():
+				if(int(kino.pos_x + j[0]) == int(self.pos_x + i[0]) and int(kino.get_pos_y() + j[1]) == int(self.pos_y + i[1])):
 					return True
 
 	def hit_confirmed(self,kino): # kino(agent) here may be a bullet or a quasar
-		self.health -= kino.damage
+		self.health -= kino.get_damage()
 
 #----------------------------------------#
 
@@ -230,6 +281,19 @@ class Token(Entity):	# Fire beams, Magnets & COINS$$
 		self.frame_loc = frame_loc
 		self.status = False
 		self.token_type = ""
+
+	###############################
+
+	def get_frame_loc(self):
+		return self.frame_loc
+
+	def get_status(self):
+		return self.status
+
+	def get_token_type(self):
+		return self.token_type
+
+	###############################
 
 	def activate_token(self):
 		self.vel_x -= GAME_SPD
@@ -264,7 +328,6 @@ class Fire_Beam(Token):
 		Token.__init__(self,frame_loc,y)
 		self.token_type = "fire_beam"
 		self.damage = 1
-		self.health = 1
 
 		if(angle==0):
 			for i in range(length):
@@ -293,6 +356,14 @@ class Fire_Beam(Token):
 			self.bound_L = 0
 			self.bound_R = length
 
+
+	###############################
+
+	def get_damage(self):
+		return self.damage
+
+	###############################
+
 #----------------------------------------#
 
 class Coin(Token):
@@ -300,8 +371,14 @@ class Coin(Token):
 		Token.__init__(self,frame_loc,y)
 		self.token_type = "coin"
 		self.reward = 10
-
 		self.body_array = [[0,0,"©","YELLOW","","BRIGHT"]]
+
+	###############################
+
+	def get_reward(self):
+		return self.reward
+
+	###############################
 
 #----------------------------------------#
 
@@ -323,6 +400,28 @@ class Player(Kinitos):
 		self.bullet_list = []
 
 		self.mag_inf_status = False
+
+	###############################
+
+	def incerement_treasure(self,value):
+		self.treasure += value
+
+	def decrement_health(self,value):
+		self.health -= value
+
+	def get_bullet_list(self):
+		return self.bullet_list
+
+	def add_bullet_list(self):	# keeps track of the unique serial no. of every quasar
+		self.bullet_count += 1
+		bullet = Bullet(self.get_bound_R()+self.get_pos_x()+1,self.get_pos_y(),BULLET_VEL,self.bullet_count)
+		self.ammo -= 1
+		self.bullet_list.append(bullet)
+
+	def remove_bullet_list(self,bullet):
+		self.bullet_list.remove(bullet)
+
+	###############################
 
 	def update_pos(self):
 		plot_obj(self,"clear")
@@ -360,12 +459,6 @@ class Player(Kinitos):
 	def gun_cooldown(self):
 		self.gun_temp -= GAME_SPD
 
-	def fire_bullet(self,player):	# keeps track of the unique serial no. of every quasar
-		self.bullet_count += 1
-		bullet = Bullet(player.bound_R+player.pos_x+1,player.pos_y,BULLET_VEL,self.bullet_count)
-		self.ammo -= 1
-		self.bullet_list.append(bullet)
-
 	def is_ammo(self):
 		if(self.ammo>0):
 			return True
@@ -377,21 +470,21 @@ class Player(Kinitos):
 		plot_text(50,1,"Ammo: "+str(self.ammo))
 
 	def bullet_out(self,bullet):
-		if(bullet.pos_x>GAME_BOUNDARY_R):
+		if(bullet.get_pos_x()>GAME_BOUNDARY_R):
 			return True
 		else:
 			return False
 
 	def magnet_influence(self,magnet):
-		distance = dist(self.pos_x,self.pos_y,magnet.pos_x,magnet.pos_y)
+		distance = dist(self.pos_x,self.pos_y,magnet.get_pos_x(),magnet.get_pos_y())
 		# print("distance:",distance)
 		if(distance<=10):
-			mag_vel_x = (magnet.pos_x - self.pos_x)/distance
-			mag_vel_y = (magnet.pos_y - self.pos_y)/distance
+			mag_vel_x = (magnet.get_pos_x() - self.pos_x)/distance
+			mag_vel_y = (magnet.get_pos_y() - self.pos_y)/distance
 			# print("Active")
 			
-			self.vel_x += mag_vel_x*magnet.MAG_VEL
-			self.vel_y += mag_vel_y*magnet.MAG_VEL
+			self.vel_x += mag_vel_x*magnet.get_MAG_VEL()
+			self.vel_y += mag_vel_y*magnet.get_MAG_VEL()
 			# plot_text(0,10,"mag_vel_x:"+str(mag_vel_x)+"mag_vel_y:"+str(mag_vel_y)+"self.vel_x"+str(self.vel_x)+"self.vel_y"+str(self.vel_y))
 		else:
 			# print("Inactive")
@@ -414,6 +507,25 @@ class Demogorgon(Kinitos):
 		self.quasar_count = 0
 		self.blaster_temp = 0
 
+	###############################
+
+	def get_status(self):
+		return self.status
+
+	def set_status(self,new_status):
+		self.status = new_status
+
+	def get_quasar_list(self):
+		return self.quasar_list
+
+	def add_quasar_list(self,quasar):
+		self.quasar_list.append(quasar)
+
+	def remove_quasar_list(self,quasar):
+		self.quasar_list.remove(quasar)
+
+	###############################
+
 	def display_health(self):
 		plot_text(70,1,"                  ")
 		plot_text(70,1,"DD Health: "+str(self.health))
@@ -435,7 +547,7 @@ class Demogorgon(Kinitos):
 			self.pos_y=GAME_BOUNDARY_U
 
 	def fire_quasar(self):
-		self.quasar_list.append(Quasar(140,self.pos_y,-1*BULLET_VEL,self.quasar_count))
+		self.add_quasar_list(Quasar(140,self.pos_y,-1*BULLET_VEL,self.quasar_count))
 		self.quasar_count += 1 # keeps track of the unique serial no. of every quasar
 		self.blaster_temp = 5
 
@@ -445,7 +557,7 @@ class Demogorgon(Kinitos):
 			self.fire_quasar()
 
 	def quasar_out(self,quasar):
-		if(quasar.pos_x<GAME_BOUNDARY_L):
+		if(quasar.get_pos_x()<GAME_BOUNDARY_L):
 			return True
 		else:
 			return False
@@ -486,6 +598,13 @@ class Magnet(Token):
 
 		self.MAG_VEL = 0.001
 
+	###############################
+
+	def get_MAG_VEL(self):
+		return self.MAG_VEL
+
+	###############################
+
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -498,22 +617,20 @@ game = Game(5)	# New game created
 ares = Player(30,10)
 hades = Demogorgon(145,20)
 
-game.token_list.append(Fire_Beam(160,20,0,10))
-game.token_list.append(Fire_Beam(180,30,0,10))
-game.token_list.append(Fire_Beam(200,30,90,10))
-game.token_list.append(Fire_Beam(220,10,45,10))
-game.token_list.append(Fire_Beam(240,21,45,10))
-game.token_list.append(Fire_Beam(260,30,45,10))
-game.token_list.append(Fire_Beam(280,10,90,20))
-game.token_list.append(Coin(180,25))
-game.token_list.append(Coin(182,25))
-game.token_list.append(Coin(184,25))
-game.token_list.append(Coin(186,25))
-game.token_list.append(Coin(188,25))
-game.token_list.append(Coin(190,25))
-game.token_list.append(Magnet(175,20))
-
-hades.quasar_list.append(Quasar(140,20,-0.02,139))
+game.add_token_list(Fire_Beam(160,20,0,10))
+game.add_token_list(Fire_Beam(180,30,0,10))
+game.add_token_list(Fire_Beam(200,30,90,10))
+game.add_token_list(Fire_Beam(220,10,45,10))
+game.add_token_list(Fire_Beam(240,21,45,10))
+game.add_token_list(Fire_Beam(260,30,45,10))
+game.add_token_list(Fire_Beam(280,10,90,20))
+game.add_token_list(Coin(180,25))
+game.add_token_list(Coin(182,25))
+game.add_token_list(Coin(184,25))
+game.add_token_list(Coin(186,25))
+game.add_token_list(Coin(188,25))
+game.add_token_list(Coin(190,25))
+game.add_token_list(Magnet(175,20))
 
 while(keyboard.is_pressed('b')==0):
 	pass
@@ -527,73 +644,73 @@ frame_R_pos = GAME_BOUNDARY_R - 2
 
 while(keyboard.is_pressed('z')==0):
 
-	if(game.mode=="NORMAL"):
+	if(game.get_mode()=="NORMAL"):
 
 		ares.disp_vects()
 
-		for tok in game.token_list:	# Token activation
-			if(tok.frame_loc+tok.bound_L<=frame_R_pos and tok.frame_loc>frame_L_pos and tok.status==False):
+		for tok in game.get_token_list():	# Token activation
+			if(tok.get_frame_loc()+tok.get_bound_L()<=frame_R_pos and tok.get_frame_loc()>frame_L_pos and tok.get_status()==False):
 				tok.activate_token()
-			if(tok.frame_loc+tok.bound_R<=frame_L_pos and tok.status==True):
+			if(tok.get_frame_loc()+tok.get_bound_R()<=frame_L_pos and tok.get_status()==True):
 				tok.deactivate_token()
 
-		for tok in game.token_list:	# Token rendering
-			if(tok.status==True):
+		for tok in game.get_token_list():	# Token rendering
+			if(tok.get_status()==True):
 				tok.render()
 
-		for tok in game.token_list:		# Token interaction
-			if(tok.status==True):	
-				if(tok.token_type=="coin"):
+		for tok in game.get_token_list():		# Token interaction
+			if(tok.get_status()==True):	
+				if(tok.get_token_type()=="coin"):
 					if(ares.if_hit_token(tok)==True):
-						ares.treasure+=tok.reward
-						game.token_list.remove(tok)
-				elif(tok.token_type=="fire_beam"):
+						ares.incerement_treasure(tok.get_reward())
+						game.remove_token_list(tok)
+				elif(tok.get_token_type()=="fire_beam"):
 					if(ares.if_hit_token(tok)==True):
-						ares.health-=tok.damage
-				elif(tok.token_type=="magnet"):
+						ares.decrement_health(tok.get_damage())
+				elif(tok.get_token_type()=="magnet"):
 					ares.magnet_influence(tok)
 
 
-		for bullet in ares.bullet_list:	# if bullets shot by ares hit a fire beam
-			for tok in game.token_list:
-				if(tok.status==True):
-					if(tok.token_type=="fire_beam"):
+		for bullet in ares.get_bullet_list():	# if bullets shot by ares hit a fire beam
+			for tok in game.get_token_list():
+				if(tok.get_status()==True):
+					if(tok.get_token_type()=="fire_beam"):
 						if(bullet.if_hit_token(tok)==True):
 							tok.redact()	# erase fire beam from screen
-							ares.bullet_list.remove(bullet)
-							game.token_list.remove(tok)
-							ares.treasure += 100
+							ares.remove_bullet_list(bullet)
+							game.remove_token_list(tok)
+							ares.incerement_treasure(100)
 
-	elif(game.mode=="DEMOGORGON"):
+	elif(game.get_mode()=="DEMOGORGON"):
 
-		for bullet in ares.bullet_list:
+		for bullet in ares.get_bullet_list():
 			if(bullet.if_hit_kinitos(hades)==True):
 				hades.hit_confirmed(bullet)	# hades hit by bullets shot by ares
-				ares.bullet_list.remove(bullet)
-				ares.treasure += 100
+				ares.remove_bullet_list(bullet)
+				ares.incerement_treasure(100)
 
-		for quasar in hades.quasar_list:
+		for quasar in hades.get_quasar_list():
 		  	if(quasar.if_hit_kinitos(ares)==True):
 		  		ares.hit_confirmed(quasar)	# ares hit by bullets shot by hades
-		  		hades.quasar_list.remove(quasar)
+		  		hades.remove_quasar_list(quasar)
 
 
-		for quasar in hades.quasar_list:
+		for quasar in hades.get_quasar_list():
 			if(hades.quasar_out(quasar)):
-				hades.quasar_list.remove(quasar)	# if bullet gone out of scope
+				hades.remove_quasar_list(quasar)	# if bullet gone out of scope
 			else:
 				quasar.update_pos()
 
-		hades.update_pos(ares.pos_x,ares.pos_y)
-		hades.rain_fire(ares.pos_x,ares.pos_y)
+		hades.update_pos(ares.get_pos_x(),ares.get_pos_y())
+		hades.rain_fire(ares.get_pos_x(),ares.get_pos_y())
 		hades.blaster_cooldown()
 		hades.display_health()
 
 #*******************************************************************************
 
-	for i in ares.bullet_list:
+	for i in ares.get_bullet_list():
 		if(ares.bullet_out(i)):
-			ares.bullet_list.remove(i) # if bullet gone out of scope
+			ares.remove_bullet_list(i) # if bullet gone out of scope
 		else:
 			i.update_pos()
 
@@ -614,7 +731,7 @@ while(keyboard.is_pressed('z')==0):
 
 	if(keyboard.is_pressed('p') and ares.fetch_gun_temp()<1 and ares.is_ammo()):
 		ares.shots_fired()	# raises gun temp so that gun cannot be used ctsly
-		ares.fire_bullet(ares)
+		ares.add_bullet_list()
 
 
 	print(int(frame_L_pos),int(frame_R_pos))
@@ -622,9 +739,9 @@ while(keyboard.is_pressed('z')==0):
 	frame_L_pos+=(FRAME_SPD)	# 1/game spd
 	frame_R_pos+=(FRAME_SPD)	# 1/game spd
 
-	if(frame_R_pos > 450 and hades.status==False):
-		hades.status==True
-		game.mode = "DEMOGORGON"
+	if(frame_R_pos > 450 and hades.get_status()==False):
+		hades.set_status(True)
+		game.set_mode("DEMOGORGON")
 
 	time.sleep(0.00002/GAME_SPD) 	# game 1/fps
 
