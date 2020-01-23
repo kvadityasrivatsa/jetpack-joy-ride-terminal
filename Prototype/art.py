@@ -1,15 +1,19 @@
+import random
+
 #-------------------------------------------------------------------------------------#
 #								    | CLASSES |								          #
 #-------------------------------------------------------------------------------------#
-player = [
-		[[0,0," ","","BLUE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","BLUE","NORMAL"]],
-		[[0,0," ","","WHITE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","WHITE","NORMAL"]]
-		 ]
+# player = [
+# 		[[0,0," ","","BLUE","BRIGHT"],[0,1," ","","MAGENTA","BRIGHT"],[1,0," ","","MAGENTA","BRIGHT"],[1,1," ","","BLUE","BRIGHT"]],
+# 		[0,1,0,1]
+# 		 ]
 
-player_shield = [
-		[[0,0," ","","GREEN","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","GREEN","NORMAL"]],
-		[[0,0," ","","WHITE","NORMAL"],[0,1," ","","MAGENTA","NORMAL"],[1,0," ","","MAGENTA","NORMAL"],[1,1," ","","WHITE","NORMAL"]]
-		 ]
+# player_shield = [
+# 		[[0,0," ","","GREEN","BRIGHT"],[0,1," ","","MAGENTA","BRIGHT"],[1,0," ","","MAGENTA","BRIGHT"],[1,1," ","","GREEN","BRIGHT"]],
+# 		[0,1,0,1]
+# 		 ]
+
+# player = []
 
 # demogorgon_parity_one = 
 
@@ -45,3 +49,52 @@ you_win = [
 			"    ╚═╝    ╚═════╝  ╚═════╝      ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝ ",
 			"                                                        "
 			]
+
+
+
+			# (ಠ_ಠ) 	(/◉ܫ◉/) ༼つ◕_◕༽つ  ( ᐛ ) ☜(˚▽˚)☞  (ง°ل͜°)ง ಠ_ಥ  (▰˘◡˘▰) ≧☉_☉≦  (¬_¬) ƪ(˘⌣˘)ʃ ｡◕‿‿◕｡
+
+			# head = ["(ಠ_ಠ),(/◉ܫ◉/)","༼つ◕_◕༽つ","☜(˚▽˚)☞","(ง°ل͜°)ง","(ಠ_ಥ)","(▰˘◡˘▰)","(≧☉_☉≦)","(¬_¬)","ƪ(˘⌣˘)ʃ","(~‾▿‾)~","(╥_╥)","ᕕ( ᐛ )ᕗ"]
+
+
+		 #    ಠ_ಠ
+			# ███▄︻̷̿┻̿═━一
+			# ███
+		 #    █ █       
+		 #   █   █
+
+
+
+   #       (/◉ܫ◉/)               
+		 #    █︻╦̵̵͇
+		 #    █
+		 #   / \
+
+
+		    # def bulid_array_package():
+player = [
+		[[0,0,"/","WHITE","BLACK","BRIGHT"],[2,0,"\\","WHITE","BLACK","BRIGHT"],[1,-1," ","WHITE","WHITE","BRIGHT"],[2,-1,"︻","WHITE","BLACK","BRIGHT"],[3,-1,"╦̵̵͇","WHITE","BLACK","BRIGHT"]],
+		[-3,0,0,0]
+		 ]
+
+player_shield = [
+		[[0,0,"/","GREEN","BLACK","BRIGHT"],[2,0,"\\","GREEN","BLACK","BRIGHT"],[1,-1," ","GREEN","GREEN","BRIGHT"],[2,-1,"︻","GREEN","BLACK","BRIGHT"],[3,-1,"╦̵̵͇","GREEN","BLACK","BRIGHT"]],
+		[-3,0,0,0]
+		 ]
+
+def initialize_player_array_package():
+	head_array = ["(ಠ_ಠ),(/◉ܫ◉/)","☜(˚▽˚)☞","(ಠ_ಥ)","(▰˘◡˘▰)","(¬_¬)","ƪ(˘⌣˘)ʃ","(~‾▿‾)~","(╥_╥)","ᕕ( ᐛ )ᕗ"]
+	head_string = head_array[random.randrange(len(head_array))]
+	if(len(head_string)==7):
+		player[1][2] = -2
+		player[1][3] = 4
+		for i in range(7):
+			player[0].append([i-2,-2,head_string[i],"WHITE","BLACK","BRIGHT"])
+			player_shield[0].append([i-2,-2,head_string[i],"GREEN","BLACK","BRIGHT"])
+	else:
+		player[1][2] = -1
+		player[1][3] = 3
+		for i in range(5):
+			player[0].append([i-1,-2,head_string[i],"WHITE","BLACK","BRIGHT"])
+			player_shield[0].append([i-2,-2,head_string[i],"GREEN","BLACK","BRIGHT"])
+

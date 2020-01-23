@@ -6,6 +6,7 @@ import math
 import const
 import method
 import classes
+import art
 
 #-------------------------------------------------------------------------------------#
 #									   | MAIN |										  #
@@ -16,6 +17,8 @@ method.setup()
 game = classes.Game()	# New game created
 ares = classes.Player(30,10)
 hades = classes.Demogorgon(const.GAME_BOUNDARY_R-3,20)
+
+art.initialize_player_array_package()
 
 game.generate_tokens(const.SCRN_WIDTH+10,1500)
 
@@ -116,7 +119,7 @@ while(keyboard.is_pressed('z')==0):
 		else:
 			i.update_pos()
 
-	ares.walk(game.get_frame_L_pos())
+	# ares.walk(game.get_frame_L_pos())
 	ares.update_pos()
 	ares.update_vel()
 	ares.gun_cooldown()

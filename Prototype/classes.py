@@ -149,9 +149,6 @@ class Game():
 		demogorgon_health = demogorgon.get_health()
 		demo_time = demogorgon.get_status()
 		ammo_string = ""
-		for i in range(player.get_ammo()):
-			ammo_string += "➤"
-
 
 		method.plot(40,const.GAME_BOUNDARY_D+2,"          ","BLACK","WHITE","BRIGHT")
 		method.plot(40,const.GAME_BOUNDARY_D+3,"   ARES   ","BLACK","WHITE","BRIGHT")
@@ -163,9 +160,12 @@ class Game():
 
 		method.plot(5,const.GAME_BOUNDARY_D+7,"SCORE: "+str(player_score)+"  ","BLACK","WHITE","BRIGHT")					
 
+		method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO:                        ","BLACK","WHITE","BRIGHT")
+
 		if(demo_time==False):
 
-			method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO: "+ammo_string+"  ","BLACK","WHITE","BRIGHT")
+			for i in range(player.get_ammo()):
+				ammo_string += "➤"
 
 			percentage_compl = int(self.__frame_L_pos*100/const.PATH_LENGTH)
 			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+2,"        ","BLACK","WHITE","BRIGHT")
@@ -175,6 +175,7 @@ class Game():
 		else:
 
 			health_bars = int(demogorgon_health*40/3000 + 1)
+			ammo_string = "∞"
 
 			method.plot(const.SCRN_WIDTH-40,const.GAME_BOUNDARY_D+2,"           ","BLACK","WHITE","BRIGHT")
 			method.plot(const.SCRN_WIDTH-40,const.GAME_BOUNDARY_D+3,"   HADES   ","BLACK","WHITE","BRIGHT")
@@ -191,6 +192,8 @@ class Game():
 			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+3,"  "+time+"  ","BLACK","WHITE","BRIGHT")
 			method.plot(const.SCRN_WIDTH/2 - 4,const.GAME_BOUNDARY_D+4,"         ","BLACK","WHITE","BRIGHT")
 			# method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO: "+player_score+"  ","BLACK","WHITE","BRIGHT")
+
+		method.plot(5,const.GAME_BOUNDARY_D+9,"AMMO: "+ammo_string+"  ","BLACK","WHITE","BRIGHT")
 
 #----------------------------------------#
 
@@ -426,7 +429,7 @@ class Player(Kinitos):
 		self._health = 5
 
 		self._body_array = []
-		self._bound_L = 0
+		self._bound_L = 0		
 		self._bound_R = 1
 		self._bound_U = 0
 		self._bound_D = 1
@@ -457,7 +460,7 @@ class Player(Kinitos):
 
 	def add_bullet_list(self):	# keeps track of the unique serial no. of every quasar
 		self.__bullet_count += 1
-		bullet = Bullet(self.get_bound_R()+self.get_pos_x()+1,self.get_pos_y(),const.BULLET_VEL,self.__bullet_count)
+		bullet = Bullet(self.get_bound_R()+self.get_pos_x()+1,self.get_pos_y()-1,const.BULLET_VEL,self.__bullet_count)
 		self.__ammo -= 1
 		self.__bullet_list.append(bullet)
 
@@ -466,6 +469,12 @@ class Player(Kinitos):
 
 	def set_array_package(self,pack):
 		self.__array_package = pack
+		self.set_body_array(self.__array_package[0])
+		self._bound_U = self.__array_package[1][0]
+		self._bound_D = self.__array_package[1][1]
+		self._bound_L = self.__array_package[1][2]
+		self._bound_R = self.__array_package[1][3]
+		# print(self.__array_package[1])
 
 	def get_treasure(self):
 		return self.__treasure
@@ -482,14 +491,14 @@ class Player(Kinitos):
 		if(self._pos_y+self._bound_D>const.GAME_BOUNDARY_D):
 			self._vel_y=0
 			self._pos_y=const.GAME_BOUNDARY_D-self._bound_D-1
-		elif(self._pos_y+self._bound_U<const.GAME_BOUNDARY_U):
+		elif(self._pos_y+self._bound_U<=const.GAME_BOUNDARY_U):
 			self._vel_y=0
-			self._pos_y=const.GAME_BOUNDARY_U
+			self._pos_y=const.GAME_BOUNDARY_U-self._bound_U
 		elif(self._pos_x+self._bound_R>const.PLAYER_BOUND_R):
 			self._pos_x=const.PLAYER_BOUND_R
 			self._vel_x=0
 		elif(self._pos_x+self._bound_L<const.PLAYER_BOUND_L+1):
-			self._pos_x=const.PLAYER_BOUND_L+2
+			self._pos_x=const.PLAYER_BOUND_L-self._bound_L+2
 			self._vel_x=0
 
 		method.plot_obj(self,"plot")
@@ -549,11 +558,11 @@ class Player(Kinitos):
 		# else:
 		# 	self._vel_x = 0
 
-	def walk(self,parity):
-		if(parity%8<4):
-			self.set_body_array(self.__array_package[0])
-		else:
-			self.set_body_array(self.__array_package[1])
+	# def walk(self,parity):
+	# 	if(parity%8<4):
+	# 		self.set_body_array(self.__array_package[0])
+	# 	else:
+	# 		self.set_body_array(self.__array_package[1])
 
 	def shields_up(self):
 		if(self.__shield_temp<0):
@@ -645,7 +654,7 @@ class Bullet(Kinitos):
 	def __init__(self,x,y,vel,serial_no):
 		Kinitos.__init__(self,x,y)
 		self.__serial_no = serial_no
-		self._body_array = [[0,0,"=","WHITE","","BRIGHT"]]
+		self._body_array = [[0,0,"➤","WHITE","","BRIGHT"]]
 		self._damage = 500
 		self._vel_x = vel # game vel already factored in 
 
