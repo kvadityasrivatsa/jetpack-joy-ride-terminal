@@ -56,8 +56,6 @@ SSAD/ASSIGNMENT-1/2020/2018114018
 			limited amount of time.
 
 
-	WARNING: This game belongs to KV ADITYA SRIVATSA© and any attempt at plagiarizing the same
-			will result in serious repercussions.
 
 
 
