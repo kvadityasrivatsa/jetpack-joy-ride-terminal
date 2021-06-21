@@ -1,6 +1,6 @@
-=======================================
-       Jetpack Joyride Terminal
-=======================================
+	=======================================   
+	       Jetpack Joyride Terminal
+	=======================================
 
 	This repo contains a terminal implementation of the popular game Jetpack Joyride.
 	
