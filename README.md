@@ -1,6 +1,8 @@
-SSAD/ASSIGNMENT-1/2020/2018114018
+=======================================
+       Jetpack Joyride Terminal
+=======================================
 
-	This is an attempted rendition of the popular game Jetpack_Joyride©
+	This repo contains a terminal implementation of the popular game Jetpack Joyride.
 	
 	# SETUP:
 		- Install keyboard and colorama library on python3 before running the primary python file "main.py"
